@@ -1,14 +1,10 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Codex (Codex.ai/code) when working with code in this repository.
 
 ## 项目概述
 
 健康小云是一个AI健康助手应用，包含Flutter移动端和Python FastAPI后端。
-
-> **注意**: `backend/` 是 git submodule（gitlink，mode 160000），独立提交。修改后端代码时需要在 `backend/` 目录内单独 commit/push，再回根仓库提交 submodule 指针更新。
->
-> ⚠️ 当前根仓库**没有** `.gitmodules` 文件，所以新克隆者直接 `git submodule update --init` 会失败。需要手工补救：`cd backend && git clone <backend-repo-url> .`（或重新跑一次 `git submodule add <url> backend`）。
 
 ## 技术栈
 
@@ -42,9 +38,9 @@ app/
 │       ├── app.dart        # 应用入口 widget (MultiBlocProvider)
 │       ├── injection.dart  # 依赖注入配置 (get_it)
 │       └── main.dart       # main函数
-├── backend/               # Python后端 (git submodule)
-│   ├── models/            # SQLAlchemy模型 (User, HealthRecord, Conversation, Message, UserProfile, Memory)
-│   ├── routers/           # API路由 (auth, health, consult, voice, user_profile)
+├── backend/               # Python后端
+│   ├── models/            # SQLAlchemy模型 (User, HealthRecord, Conversation, Message)
+│   ├── routers/           # API路由 (auth, health, consult, voice)
 │   ├── schemas/           # Pydantic schemas
 │   ├── services/          # 业务逻辑 (auth_service, health_service, ai_service)
 │   ├── utils/             # 工具函数 (security, deps)
@@ -52,32 +48,15 @@ app/
 │   ├── main.py            # FastAPI入口
 │   ├── database.py        # 数据库配置 (SessionLocal, engine, Base)
 │   └── config.py          # pydantic-settings, 从.env读取
-├── start_dev.ps1          # Flutter Web 一键启动 (PowerShell, 后端 + Flutter Chrome)
-├── start_web.bat          # xiaohe-web 一键启动 (cmd, 后端 :8002 + Vite :5180)
 └── docs/                  # 项目文档
     ├── README.md           # 快速上手和常用命令
     ├── 架构说明.md         # Clean Architecture 分层详解
-    ├── 数据流图.md         # 端到端数据流（前端 ↔ 后端 ↔ DashScope）
     ├── 语音通话实现.md     # DashScope Realtime 集成细节
     ├── 部署打包.md         # 构建、部署、测试
     └── design/             # 设计规范和原型
 ```
 
 ## 常用命令
-
-### 一键启动（开发环境）
-```powershell
-# 同时启动后端 + Flutter Web (Chrome)
-.\start_dev.ps1
-
-# 仅后端 / 仅前端
-.\start_dev.ps1 -Backend
-.\start_dev.ps1 -Frontend
-
-# 启动前先装依赖
-.\start_dev.ps1 -Build
-```
-脚本依赖 `backend/.env`；后端跑在 `:8002`，端口冲突会自动跳过启动。后台 Job 名: `health-xiaohe-backend` / `health-xiaohe-flutter`，停止用 `Get-Job | Stop-Job; Get-Job | Remove-Job`。
 
 ### Flutter
 ```bash
@@ -154,11 +133,6 @@ Backend通过 `backend/.env` 文件配置，由 `config.py` 的 `pydantic-settin
 - `POST /api/consult/voice/chat/stream` - 语音对话流式
 - `WS /api/consult/voice/ws` - 实时语音通话WebSocket (需token参数认证)
 
-### 用户画像 & 长期记忆 (prefix: /api/user)
-- `GET /api/user/profile` - 获取 UserProfile（性别/年龄/身高/体重/health_summary/risk_tags）+ Top 20 长期记忆
-- `PUT /api/user/profile` - 更新画像基本信息
-- `DELETE /api/user/memories/{memory_id}` - 删除单条长期记忆
-
 ## 架构说明
 
 ### Flutter Clean Architecture
@@ -225,30 +199,20 @@ WebSocket消息类型:
 
 流式接口在生成完所有内容后，通过SSE返回 `conversation_id` 供前端后续使用。
 
-### 用户画像 & 长期记忆
-
-`models/memory.py` 定义两张表：
-- **UserProfile**: 1:1 关联 User，存基础人口学字段 + AI 生成的 `health_summary` + `risk_tags` 数组
-- **Memory**: 用户级长期记忆条目，含 `category`(habit/disease/preference 等) + `fact`(自然语言) + `importance`(权重) + 去重逻辑
-
-AI 对话/语音通话产生的事实经过去重后写入 Memory，对话上下文构建时会把高 importance 条目和 HealthRecord 一并注入 system prompt（即"健康记录上下文"机制）。
-
 ## 路由与导航
 
 Flutter使用 `go_router` 和 `ShellRoute` 实现底部导航栏:
 
 ```
-/ (启动页) → /login (登录) → /chat (聊天首页, 支持 ?conversationId=xxx 继续历史对话)
-                             ├── /ai-impression (AI 画像 + 长期记忆，原 /health-records)
+/ (启动页) → /login (登录) → /chat (聊天首页)
+                             ├── /health-records (健康记录)
                              ├── /chat-history (对话历史列表)
                              ├── /profile (个人中心)
                              ├── /call (语音通话)
                              └── /chat-history/:conversationId (对话详情)
 ```
 
-底部导航栏4个tab: **咨询、画像、历史、我的**。`/ai-impression` 由 `user_profile_page.dart` 渲染，调用 `/api/user/profile` 展示用户画像和长期记忆。
-
-> 历史命名: 路由常量是 `AppRouter.aiImpression` (commit `7f2de59` 重命名)。旧代码/文档里的 `/health-records` 已废弃。
+底部导航栏4个tab: 咨询、记录、历史、我的。
 
 ## 设计规范
 
@@ -272,47 +236,3 @@ Flutter使用 `go_router` 和 `ShellRoute` 实现底部导航栏:
 ### API 端口
 - 开发环境: `http://localhost:8002` (Flutter `ApiEndpoints.baseUrl` 和 uvicorn 默认端口一致)
 - 模拟器环境: `http://192.168.1.84:8002` (Mumu模拟器通过WiFi连接宿主机局域网IP)
-
-## 第二前端: xiaohe-web (Vite + Vue 3)
-
-除了 Flutter 端 `health_xiaohe/`，根目录另有一个 web 前端 `xiaohe-web/` —— 温柔生物形态美学的 SPA，Vite + Vue 3 + TS + Pinia + vue-router。直接对接 `:8002` 后端（vite 开发期 proxy `/api` → `localhost:8002`）。
-
-```bash
-cd xiaohe-web
-npm install
-npm run dev        # http://localhost:5180
-```
-
-更便捷的入口：根目录的 `start_web.bat` 会同时检查环境、起后端（uvicorn :8002 --reload，等 `/health` 200 后）、起 Vite（:5180，自动打开 Chrome），并把两边日志拆到独立 cmd 窗口。停止服务直接关那两个弹窗即可。
-
-页面：`/`(landing) · `/login` · `/chat`(流式 + markdown) · `/history` · `/profile` · `/records`。流式聊天用 fetch + ReadableStream（不能用 EventSource — 后端 `POST /api/consult/chat/stream` 需要 `Authorization` header），前端有打字机节流（默认 60 字/秒）。AI 回复经 `marked` + `dompurify` 渲染 markdown。
-
-### web 端踩过的坑（修过的真 bug，值得防范）
-
-1. **Vue 3 reactive plain-object + closure 引用导致响应式静默失效**：
-   ```ts
-   const aiMsg = { content: "" };       // plain
-   messages.value.push(aiMsg);          // Vue 内部建 proxy，但闭包仍指向原始对象
-   onChunk(d => { aiMsg.content += d }) // 改原始对象 → 不触发 setter → DOM 不更新
-   ```
-   症状：流式逐字看不到，最后一次性"突然全部出现"（其实是别的 ref 改动触发了 re-render，render 时通过 proxy 读到了被悄悄改完的最新值）。修法：`const aiMsg = reactive({...})` 显式包装后再 push，闭包持有的就是 proxy 本身。**任何"raf loop 写属性"或"流式逐字更新"的场景必须这样做。** 见 `xiaohe-web/src/pages/ChatPage.vue` 的 send()。
-
-2. **Pinia setup store 的 computed 短路求值导致依赖追踪丢失**：
-   ```ts
-   const isAuthed = computed(() => !!getToken() && !!user.value);
-   ```
-   初始 token 是 null，`&&` 短路，`user.value` 没被读到 → computed 的 deps 里**没有 user** → 之后 user.value 被赋值也不触发重算，isAuthed 永远是初始的 false。修法：把 reactive ref 放 `&&` 左边（`user.value !== null && !!getToken()`）或独立访问一次。见 `xiaohe-web/src/stores/auth.ts`。
-
-3. **Google Fonts API v2 variable axes 必须按"大写在前 / 小写在后，组内字母序"排**：
-   `Fraunces:SOFT,ital,opsz,wght@...` 对，`Fraunces:ital,opsz,wght,SOFT@...` 返回 200 但 variable 轴失效，浏览器静默回退到 fallback 字体。见 `xiaohe-web/index.html`。
-
-4. **Vue scoped style 不会作用于 v-html 注入的子元素**：用 `:deep()` 或把样式放 `global.css`。markdown 渲染的 `<strong>` `<ol>` 等样式都在 `xiaohe-web/src/styles/global.css` 的 `.md` 命名空间下。
-
-### 给 web 端 chat 流式后端的协议契约
-
-- 后端 SSE 帧格式：`data: {json}\n\n`，三种 json payload：
-  - `{ content: "delta" }` — chunk
-  - `{ conversation_id: "..." }` — 持久化后告诉前端，用于后续续聊
-  - `{ suggestions: [...] }` — 跟问建议
-- 终止符：`data: [DONE]\n\n`
-- 必须在 response header 设 `X-Accel-Buffering: no` 否则某些反代会缓冲整段才发
