@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:health_xiaohe/core/constants/app_colors.dart';
+import 'package:health_xiaohe/core/constants/app_radius.dart';
 import 'package:health_xiaohe/core/constants/app_strings.dart';
+import 'package:health_xiaohe/core/constants/app_typography.dart';
+import 'package:health_xiaohe/core/animations/entrance.dart';
 import 'package:health_xiaohe/presentation/blocs/auth/auth_bloc.dart';
 import 'package:health_xiaohe/presentation/blocs/auth/auth_state.dart';
 import 'package:health_xiaohe/presentation/blocs/chat/chat_bloc.dart';
@@ -21,6 +25,11 @@ class ChatHomePage extends StatefulWidget {
 
 class _ChatHomePageState extends State<ChatHomePage> {
   final _scrollController = ScrollController();
+
+  // 已完成的 AI 气泡按消息对象身份缓存对应 widget 实例。
+  // 流式期间整列每 ~50ms 重建一次，靠 identical(old,new) 短路让历史气泡跳过
+  // rebuild —— 否则可见的旧气泡会反复重新解析 Markdown。Expando 随对象 GC，无需手动清理。
+  final _bubbleCache = Expando<Widget>();
 
   @override
   void initState() {
@@ -62,7 +71,7 @@ class _ChatHomePageState extends State<ChatHomePage> {
     return Scaffold(
       drawer: _buildSideDrawer(context),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.bgBase,
         elevation: 0,
         leadingWidth: 0,
         leading: const SizedBox.shrink(),
@@ -79,7 +88,7 @@ class _ChatHomePageState extends State<ChatHomePage> {
                     height: 40,
                     decoration: BoxDecoration(
                       color: AppColors.primary,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppRadius.logo),
                     ),
                     child: const Center(
                       child: Text('🌿', style: TextStyle(fontSize: 20)),
@@ -107,7 +116,7 @@ class _ChatHomePageState extends State<ChatHomePage> {
             builder: (context, state) {
               if (state.conversationId != null) {
                 return IconButton(
-                  icon: const Icon(Icons.add_comment, color: AppColors.primary),
+                  icon: const Icon(LucideIcons.plus, color: AppColors.primary),
                   tooltip: '新建对话',
                   onPressed: () {
                     context.read<ChatBloc>().add(ChatNewConversation());
@@ -124,6 +133,18 @@ class _ChatHomePageState extends State<ChatHomePage> {
           // Messages list
           Expanded(
             child: BlocConsumer<ChatBloc, ChatState>(
+              // 只在消息条数变化、错误出现、或流式状态翻转时触发 listener；
+              // 流式中字数增长不再每个 chunk 都触发 animateTo
+              listenWhen: (prev, cur) =>
+                  prev.messages.length != cur.messages.length ||
+                  prev.error != cur.error ||
+                  prev.isStreaming != cur.isStreaming,
+              // 仅当消息列表/流式/加载态变化才重建列表；suggestions、conversationId
+              // 等变化不再触发整列重建（copyWith 未改 messages 时引用不变）
+              buildWhen: (prev, cur) =>
+                  !identical(prev.messages, cur.messages) ||
+                  prev.isStreaming != cur.isStreaming ||
+                  prev.isLoading != cur.isLoading,
               listener: (context, state) {
                 if (state.error != null) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -150,9 +171,18 @@ class _ChatHomePageState extends State<ChatHomePage> {
                     final msgIndex = index - 1;
                     final msg = state.messages[msgIndex];
                     final isLast = msgIndex == state.messages.length - 1;
-                    return MessageBubble(
-                      message: msg,
-                      isStreaming: isLast && state.isStreaming && msg.isAssistant,
+                    final streaming =
+                        isLast && state.isStreaming && msg.isAssistant;
+
+                    // 已完成的 AI 气泡：复用缓存的 widget 实例，rebuild 时被短路跳过
+                    if (msg.isAssistant && !streaming) {
+                      return _bubbleCache[msg] ??= RepaintBoundary(
+                        child: MessageBubble(message: msg, isStreaming: false),
+                      );
+                    }
+                    // 流式气泡 / 用户气泡：RepaintBoundary 把光标闪烁等重绘和列表其余部分隔离
+                    return RepaintBoundary(
+                      child: MessageBubble(message: msg, isStreaming: streaming),
                     );
                   },
                 );
@@ -174,11 +204,12 @@ class _ChatHomePageState extends State<ChatHomePage> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                         decoration: BoxDecoration(
-                          color: AppColors.aiBubbleBg,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+                          color: AppColors.bgSubtle,
+                          borderRadius: BorderRadius.circular(AppRadius.chip),
                         ),
-                        child: Text(s, style: const TextStyle(fontSize: 13, color: AppColors.primaryDark)),
+                        child: Text(s,
+                            style: AppTypography.caption
+                                .copyWith(color: AppColors.primaryDark)),
                       ),
                     )).toList(),
                   ),
@@ -389,86 +420,47 @@ class _ChatHomePageState extends State<ChatHomePage> {
     );
   }
 
+  String _greetingByHour() {
+    final h = DateTime.now().hour;
+    if (h < 6) return '夜深了,我是小云';
+    if (h < 11) return '早安,我是小云';
+    if (h < 14) return '午安,我是小云';
+    if (h < 18) return '下午好,我是小云';
+    return '晚上好,我是小云';
+  }
+
   Widget _buildWelcomeCard() {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [AppColors.primary, AppColors.primaryDark],
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withOpacity(0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16, top: 4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  shape: BoxShape.circle,
-                ),
-                child: const Center(
-                  child: Text('🌿', style: TextStyle(fontSize: 24)),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '你好！我是健康小云',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
-                    Text(
-                      '您的专属 AI 健康管家',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.white70,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+          Entrance(
+            index: 0,
+            child: Text('HEALTH XIAOHE', style: AppTypography.overline),
           ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(12),
-            ),
+          const SizedBox(height: 6),
+          Entrance(
+            index: 1,
+            child: Text(_greetingByHour(), style: AppTypography.displaySerif),
+          ),
+          const SizedBox(height: 4),
+          Entrance(
+            index: 2,
             child: const Text(
-              '我可以帮你：解答健康问题、分析症状、提供养生建议。如有严重不适，请及时就医哦！',
+              '今天想聊些什么?我都在。',
               style: TextStyle(
+                fontFamily: null,
+                fontWeight: FontWeight.w400,
                 fontSize: 13,
-                color: Colors.white,
-                height: 1.6,
+                color: AppColors.textSecondary,
               ),
             ),
           ),
-          const SizedBox(height: 12),
-          // Quick tips — 优先用 AI 基于画像生成的建议
+          const SizedBox(height: 16),
           BlocBuilder<ChatBloc, ChatState>(
-            buildWhen: (prev, cur) => prev.welcomeSuggestions != cur.welcomeSuggestions,
+            buildWhen: (prev, cur) =>
+                prev.welcomeSuggestions != cur.welcomeSuggestions,
             builder: (context, state) {
               final tips = state.welcomeSuggestions.isNotEmpty
                   ? state.welcomeSuggestions
@@ -476,7 +468,10 @@ class _ChatHomePageState extends State<ChatHomePage> {
               return Wrap(
                 spacing: 8,
                 runSpacing: 8,
-                children: tips.map(_buildQuickTip).toList(),
+                children: [
+                  for (var i = 0; i < tips.length; i++)
+                    Entrance(index: 3 + i, child: _buildQuickTip(tips[i])),
+                ],
               );
             },
           ),
@@ -493,15 +488,12 @@ class _ChatHomePageState extends State<ChatHomePage> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: AppColors.primaryLight,
-          borderRadius: BorderRadius.circular(20),
+          color: AppColors.bgSubtle,
+          borderRadius: BorderRadius.circular(AppRadius.chip),
         ),
         child: Text(
           text,
-          style: const TextStyle(
-            fontSize: 13,
-            color: AppColors.primaryDark,
-          ),
+          style: AppTypography.caption.copyWith(color: AppColors.primaryDark),
         ),
       ),
     );
