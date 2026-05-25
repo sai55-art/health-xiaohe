@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  允许明文 HTTP 仅限本机和局域网 IP（dev/lan 联调用）。
+  生产 release 接的是 HTTPS API 时，这里不会放行公网明文请求。
+-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">localhost</domain>
+        <domain includeSubdomains="false">10.0.2.2</domain>
+        <!-- 常见局域网段 — 按需增删 -->
+        <domain-suffix includeSubdomains="true">192.168.1.84</domain-suffix>
+    </domain-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

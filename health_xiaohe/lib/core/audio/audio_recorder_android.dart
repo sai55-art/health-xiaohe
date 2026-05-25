@@ -1,7 +1,6 @@
 // Android 平台录音 — MethodChannel 直连原生 AudioRecord + 硬件回声消除
 import 'dart:async';
 import 'dart:convert';
-import 'dart:math';
 import 'dart:typed_data';
 import 'package:flutter/services.dart';
 import 'audio_recorder_base.dart';
@@ -47,13 +46,19 @@ class AudioRecorder extends AudioRecorderBase {
   }
 
   bool _isLoud(Uint8List pcm) {
+    // 步进采样而非逐样本遍历：门限判断不需要精确峰值，每 8 个样本取一个，
+    // 把 AI 说话期间这段 UI isolate 的 CPU 开销降一个数量级（避免和涟漪动画抢帧）。
     final view = ByteData.view(pcm.buffer, pcm.offsetInBytes, pcm.length);
     var peak = 0;
-    for (var i = 0; i < pcm.length - 1; i += 2) {
+    const stride = 16; // 8 个 16-bit 样本
+    for (var i = 0; i + 1 < pcm.length; i += stride) {
       final s = view.getInt16(i, Endian.little).abs();
-      peak = max(peak, s);
+      if (s > peak) {
+        peak = s;
+        if (peak > 800) return true; // 提前退出，无需扫完整块
+      }
     }
-    return peak > 5000; // 必须大声才能通过（约15%最大振幅，过滤扬声器回声）
+    return peak > 800; // 正常说话约 2.5% 最大振幅，滤除底噪即可
   }
 
   @override
