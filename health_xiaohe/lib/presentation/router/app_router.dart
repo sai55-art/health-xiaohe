@@ -11,6 +11,8 @@ import 'package:health_xiaohe/presentation/pages/history/conversation_detail_pag
 import 'package:health_xiaohe/presentation/pages/profile/personal_center_page.dart';
 import 'package:health_xiaohe/presentation/pages/profile/user_profile_page.dart';
 import 'package:health_xiaohe/core/constants/app_colors.dart';
+import 'package:health_xiaohe/core/constants/app_motion.dart';
+import 'package:health_xiaohe/core/animations/page_transitions.dart';
 
 class AppRouter {
   static const String splash = '/';
@@ -27,21 +29,25 @@ class AppRouter {
     routes: [
       GoRoute(
         path: splash,
-        builder: (context, state) => const SplashPage(),
+        pageBuilder: (context, state) =>
+            fadeUpPage(state: state, child: const SplashPage()),
       ),
       GoRoute(
         path: login,
-        builder: (context, state) => const LoginPage(),
+        pageBuilder: (context, state) =>
+            fadeUpPage(state: state, child: const LoginPage()),
       ),
       GoRoute(
         path: call,
-        builder: (context, state) => const CallPage(),
+        pageBuilder: (context, state) =>
+            fadeUpPage(state: state, child: const CallPage()),
       ),
       GoRoute(
         path: '/chat-history/:conversationId',
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final id = state.pathParameters['conversationId']!;
-          return ConversationDetailPage(conversationId: id);
+          return fadeUpPage(
+              state: state, child: ConversationDetailPage(conversationId: id));
         },
       ),
       ShellRoute(
@@ -236,7 +242,13 @@ class MainShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: child,
+      body: AnimatedSwitcher(
+        duration: AppMotion.fast,
+        child: KeyedSubtree(
+          key: ValueKey(GoRouterState.of(context).uri.path),
+          child: child,
+        ),
+      ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _calculateSelectedIndex(context),
         onTap: (index) => _onItemTapped(index, context),

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:health_xiaohe/core/constants/app_colors.dart';
+import 'package:health_xiaohe/core/constants/app_radius.dart';
+import 'package:health_xiaohe/core/constants/app_typography.dart';
 
 class AppTheme {
   AppTheme._();
@@ -10,70 +12,60 @@ class AppTheme {
       colorScheme: ColorScheme.fromSeed(
         seedColor: AppColors.primary,
         primary: AppColors.primary,
-        secondary: AppColors.primaryDark,
-        surface: Colors.white,
+        secondary: AppColors.accent,
+        surface: AppColors.bgCard,
         error: AppColors.danger,
       ),
-      scaffoldBackgroundColor: AppColors.backgroundEnd,
+      scaffoldBackgroundColor: AppColors.bgBase,
       appBarTheme: const AppBarTheme(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.bgBase,
         elevation: 0,
         centerTitle: false,
         iconTheme: IconThemeData(color: AppColors.textSecondary),
-        titleTextStyle: TextStyle(
-          color: AppColors.textPrimary,
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-        ),
+        titleTextStyle: AppTypography.titleSans,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
           minimumSize: const Size(double.infinity, 52),
+          elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(26),
+            borderRadius: BorderRadius.circular(AppRadius.input),
           ),
-          textStyle: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
+          textStyle: AppTypography.titleSans.copyWith(
+            fontSize: 17,
+            color: Colors.white,
           ),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(
-          foregroundColor: AppColors.primaryDark,
-        ),
+        style: TextButton.styleFrom(foregroundColor: AppColors.primaryDark),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: Colors.white,
+        fillColor: AppColors.bgCard,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(26),
-          borderSide: const BorderSide(color: AppColors.divider),
+          borderRadius: BorderRadius.circular(AppRadius.input),
+          borderSide: const BorderSide(color: AppColors.border),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(26),
-          borderSide: const BorderSide(color: AppColors.divider),
+          borderRadius: BorderRadius.circular(AppRadius.input),
+          borderSide: const BorderSide(color: AppColors.border),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(26),
+          borderRadius: BorderRadius.circular(AppRadius.input),
           borderSide: const BorderSide(color: AppColors.primary, width: 2),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         hintStyle: const TextStyle(color: AppColors.textPlaceholder),
       ),
-      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-        backgroundColor: Colors.white,
-        selectedItemColor: AppColors.primary,
-        unselectedItemColor: AppColors.textTertiary,
-        type: BottomNavigationBarType.fixed,
-        elevation: 8,
-      ),
       cardTheme: CardThemeData(
-        elevation: 2,
+        elevation: 0,
+        color: AppColors.bgCard,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadius.card),
         ),
       ),
     );
