@@ -273,6 +273,8 @@ Flutter使用 `go_router` 和 `ShellRoute` 实现底部导航栏:
 - 开发环境: `http://localhost:8002` (Flutter `ApiEndpoints.baseUrl` 和 uvicorn 默认端口一致)
 - 模拟器环境: `http://192.168.1.84:8002` (Mumu模拟器通过WiFi连接宿主机局域网IP)
 
+> **Android 明文 HTTP 联调**: Android 默认禁止明文 HTTP，连不上 `:8002` 开发后端。`AndroidManifest.xml` 已开 `usesCleartextTraffic="true"` + `networkSecurityConfig="@xml/network_security_config"`，白名单仅放行 `localhost`、`10.0.2.2`(标准 AVD 宿主机)、`192.168.1.84` 网段；换局域网 IP 联调时需同步改 `res/xml/network_security_config.xml`。release 接 HTTPS 时 `base-config` 不放行公网明文。Android 权限 (`INTERNET`/`RECORD_AUDIO`/`CAMERA`) 也在该 manifest 声明。
+
 ## 第二前端: xiaohe-web (Vite + Vue 3)
 
 除了 Flutter 端 `health_xiaohe/`，根目录另有一个 web 前端 `xiaohe-web/` —— 温柔生物形态美学的 SPA，Vite + Vue 3 + TS + Pinia + vue-router。直接对接 `:8002` 后端（vite 开发期 proxy `/api` → `localhost:8002`）。
