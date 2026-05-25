@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:intl/intl.dart';
 import 'package:health_xiaohe/core/constants/app_colors.dart';
+import 'package:health_xiaohe/core/constants/app_motion.dart';
+import 'package:health_xiaohe/core/constants/app_radius.dart';
+import 'package:health_xiaohe/core/constants/app_shadows.dart';
 import 'package:health_xiaohe/data/models/chat_message_model.dart';
 
 class MessageBubble extends StatelessWidget {
@@ -17,13 +20,13 @@ class MessageBubble extends StatelessWidget {
         : AiMessageBubble(message: message, isStreaming: isStreaming);
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: 1),
-      duration: const Duration(milliseconds: 260),
-      curve: Curves.easeOutCubic,
+      duration: AppMotion.base,
+      curve: AppMotion.calm,
       builder: (context, t, c) {
         return Opacity(
           opacity: t,
           child: Transform.translate(
-            offset: Offset(0, (1 - t) * 10),
+            offset: Offset(0, (1 - t) * AppMotion.entranceOffset),
             child: c,
           ),
         );
@@ -100,6 +103,13 @@ class AiMessageBubble extends StatelessWidget {
     ),
   );
 
+  // 流式期间的纯文本样式，和 Markdown 的 p 样式保持一致，完成时无缝切到 MarkdownBody
+  static const _streamingTextStyle = TextStyle(
+    fontSize: 16,
+    color: AppColors.textSecondary,
+    height: 1.5,
+  );
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -123,24 +133,29 @@ class AiMessageBubble extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppColors.aiBubbleBg,
+                color: AppColors.bgCard,
                 borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(4),
-                  topRight: Radius.circular(16),
-                  bottomLeft: Radius.circular(16),
-                  bottomRight: Radius.circular(16),
+                  topLeft: Radius.circular(AppRadius.bubbleTail),
+                  topRight: Radius.circular(AppRadius.bubble),
+                  bottomLeft: Radius.circular(AppRadius.bubble),
+                  bottomRight: Radius.circular(AppRadius.bubble),
                 ),
-                border: Border.all(color: AppColors.aiBubbleBorder),
+                border: Border.all(color: AppColors.borderSoft),
+                boxShadow: AppShadows.soft,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (message.content.isNotEmpty)
-                    MarkdownBody(
-                      data: message.content,
-                      styleSheet: _styleSheet,
-                      selectable: true,
-                    ),
+                    // 流式中用纯 Text：避免每 ~50ms 把不断变长的整段 Markdown
+                    // 重新解析一遍 + SelectableText 的额外开销；完成后再渲染富文本
+                    isStreaming
+                        ? Text(message.content, style: _streamingTextStyle)
+                        : MarkdownBody(
+                            data: message.content,
+                            styleSheet: _styleSheet,
+                            selectable: true,
+                          ),
                   if (isStreaming)
                     Padding(
                       padding: EdgeInsets.only(top: message.content.isEmpty ? 4 : 2),
@@ -240,13 +255,14 @@ class UserMessageBubble extends StatelessWidget {
               padding: const EdgeInsets.all(8),
               constraints: const BoxConstraints(maxWidth: 280),
               decoration: BoxDecoration(
-                color: AppColors.userBubbleBg,
+                color: AppColors.primary,
                 borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(16),
-                  topRight: Radius.circular(4),
-                  bottomLeft: Radius.circular(16),
-                  bottomRight: Radius.circular(16),
+                  topLeft: Radius.circular(AppRadius.bubble),
+                  topRight: Radius.circular(AppRadius.bubbleTail),
+                  bottomLeft: Radius.circular(AppRadius.bubble),
+                  bottomRight: Radius.circular(AppRadius.bubble),
                 ),
+                boxShadow: AppShadows.primary,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,

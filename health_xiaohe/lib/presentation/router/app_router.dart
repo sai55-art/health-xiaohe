@@ -13,6 +13,7 @@ import 'package:health_xiaohe/presentation/pages/profile/user_profile_page.dart'
 import 'package:health_xiaohe/core/constants/app_colors.dart';
 import 'package:health_xiaohe/core/constants/app_motion.dart';
 import 'package:health_xiaohe/core/animations/page_transitions.dart';
+import 'package:health_xiaohe/presentation/widgets/common/app_bottom_nav.dart';
 
 class AppRouter {
   static const String splash = '/';
@@ -249,34 +250,9 @@ class MainShell extends StatelessWidget {
           child: child,
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
+      bottomNavigationBar: AppBottomNav(
         currentIndex: _calculateSelectedIndex(context),
         onTap: (index) => _onItemTapped(index, context),
-        selectedItemColor: AppColors.primary,
-        unselectedItemColor: AppColors.textTertiary,
-        type: BottomNavigationBarType.fixed,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.chat_bubble_outline),
-            activeIcon: Icon(Icons.chat_bubble),
-            label: '咨询',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.favorite_outline),
-            activeIcon: Icon(Icons.favorite),
-            label: '画像',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.history),
-            activeIcon: Icon(Icons.history),
-            label: '历史',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
-            label: '我的',
-          ),
-        ],
       ),
     );
   }

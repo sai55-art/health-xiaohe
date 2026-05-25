@@ -1,6 +1,9 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:health_xiaohe/core/constants/app_colors.dart';
+import 'package:health_xiaohe/core/constants/app_radius.dart';
+import 'package:health_xiaohe/core/constants/app_shadows.dart';
 import 'package:health_xiaohe/presentation/widgets/chat/image_picker_stub.dart'
     if (dart.library.html) 'package:health_xiaohe/presentation/widgets/chat/image_picker_web.dart';
 
@@ -121,8 +124,8 @@ class _ChatInputFieldState extends State<ChatInputField> with TickerProviderStat
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
           decoration: const BoxDecoration(
-            color: Colors.white,
-            border: Border(top: BorderSide(color: AppColors.divider)),
+            color: AppColors.bgBase,
+            border: Border(top: BorderSide(color: AppColors.borderSoft)),
           ),
           child: SafeArea(
             top: false,
@@ -137,11 +140,11 @@ class _ChatInputFieldState extends State<ChatInputField> with TickerProviderStat
                     child: Container(
                       width: 36, height: 36,
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: AppColors.bgCard,
                         shape: BoxShape.circle,
-                        border: Border.all(color: AppColors.divider, width: 1.5),
+                        border: Border.all(color: AppColors.border, width: 1.5),
                       ),
-                      child: const Icon(Icons.add, color: AppColors.textSecondary, size: 22),
+                      child: const Icon(LucideIcons.plus, color: AppColors.textSecondary, size: 22),
                     ),
                   ),
                 ),
@@ -151,7 +154,9 @@ class _ChatInputFieldState extends State<ChatInputField> with TickerProviderStat
                   child: Container(
                     height: 40,
                     decoration: BoxDecoration(
-                      color: AppColors.inputBg, borderRadius: BorderRadius.circular(20),
+                      color: AppColors.bgCard,
+                      borderRadius: BorderRadius.circular(AppRadius.chip + 4),
+                      boxShadow: AppShadows.soft,
                     ),
                     child: TextField(
                       controller: _controller,
@@ -172,7 +177,7 @@ class _ChatInputFieldState extends State<ChatInputField> with TickerProviderStat
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
-                              _isRecording ? Icons.stop : Icons.mic,
+                              _isRecording ? LucideIcons.square : LucideIcons.mic,
                               color: Colors.white, size: 16,
                             ),
                           ),
@@ -189,8 +194,12 @@ class _ChatInputFieldState extends State<ChatInputField> with TickerProviderStat
                   onTap: _send,
                   child: Container(
                     width: 36, height: 36,
-                    decoration: BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
-                    child: const Icon(Icons.arrow_upward, color: Colors.white, size: 18),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      shape: BoxShape.circle,
+                      boxShadow: AppShadows.primary,
+                    ),
+                    child: const Icon(LucideIcons.arrowUp, color: Colors.white, size: 18),
                   ),
                 ),
               ],
@@ -212,21 +221,21 @@ class _ChatInputFieldState extends State<ChatInputField> with TickerProviderStat
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           _buildPanelItem(
-            icon: Icons.image, label: '发送图片', color: const Color(0xFF5BC0BE),
+            icon: LucideIcons.image, label: '发送图片', color: AppColors.primary,
             onTap: () {
               _togglePanel();
               _pickImage();
             },
           ),
           _buildPanelItem(
-            icon: Icons.call, label: '语音通话', color: const Color(0xFF52C41A),
+            icon: LucideIcons.phone, label: '语音通话', color: AppColors.primary,
             onTap: () {
               _togglePanel();
               widget.onCallPressed?.call();
             },
           ),
           _buildPanelItem(
-            icon: Icons.favorite, label: '健康记录', color: AppColors.warning,
+            icon: LucideIcons.heart, label: '健康记录', color: AppColors.primary,
             onTap: () {
               _togglePanel();
               widget.onHealthRecordPressed?.call();
