@@ -54,3 +54,18 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  fonts:
+    # 宋体大标题(简体子集,见 AppTypography.serif)
+    - family: NotoSerifSC
+      fonts:
+        - asset: assets/fonts/NotoSerifSC-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/NotoSerifSC-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/NotoSerifSC-SemiBold.ttf
+          weight: 600
+    # 英数/数字衬线(可变字体,wght 轴随 fontWeight 映射,见 AppTypography.fraunces)
+    - family: Fraunces
+      fonts:
+        - asset: assets/fonts/Fraunces-Variable.ttf
