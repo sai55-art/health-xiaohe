@@ -252,22 +252,25 @@ Flutter使用 `go_router` 和 `ShellRoute` 实现底部导航栏:
 
 ## 设计规范
 
-参考 `docs/design/健康小云App原型.html`:
-- 品牌色: `#4ECDC4` (蓝绿)
-- 辅助色: `#2D9CDB` (深蓝)
-- 背景渐变: `#E8F8F7` → `#FFFFFF`
-- 间距系统: 8pt网格
+> **当前视觉系统(`feat/visual-redesign` 分支)**: 「奶油暖调 · 哑光鼠尾草」token 化体系，已取代旧的 `#4ECDC4` 蓝绿色板。所有颜色/字体/动效/圆角/阴影都集中在 `core/constants/` 的 token 类里，**新增 UI 一律引用 token，不要再写裸 hex**。设计参考 `docs/design/2026-04-30-健康小荷-Flutter-App设计规范.md` 与 `健康小荷App原型.html`(注意设计文档命名用「小荷」，代码/产品名是「小云」)。
 
-### 关键UI组件
+### 设计 token(`core/constants/`)
 
-| 组件 | 样式 |
-|------|------|
-| 顶部导航栏 | 72px, 品牌logo+标题+菜单按钮 |
-| 消息气泡-AI | 左对齐, `#F0FAFB`背景, 圆角20px(左上4px) |
-| 消息气泡-用户 | 右对齐, `#4ECDC4`背景, 白色文字 |
-| 输入框 | 48px高, 圆角24px, `#F5F5F5`背景 |
-| 快捷问题标签 | 圆角20px, `#E8F8F7`背景 |
-| 记录卡片 | 圆角16px, 阴影, 状态标签(正常/偏高/危险) |
+| token 类 | 文件 | 关键值 |
+|----------|------|--------|
+| `AppColors` | `app_colors.dart` | 主色鼠尾草 `#7FB3A8`、燕麦奶油背景 `#F6F4EE`、暖砂点缀 `#B9A88F`、暖墨文字阶。**旧名(primary/aiBubbleBg/textPrimary…)保留为别名重映射到新色板**，未改造页面自动呈现新配色 |
+| `AppTypography` | `app_typography.dart` | 宋体大标题 `NotoSerifSC`(displaySerif/headingSerif) + `Fraunces` 英数/数字 + 系统正文。⚠️ **字体文件尚未在 `pubspec.yaml` 声明(commit `1b25ce9` 标注"字体待后补")**，目前会回退到系统字体 |
+| `AppMotion` | `app_motion.dart` | 静润曲线 `calm = Cubic(0.22,0.61,0.36,1)`(强缓出、无回弹)、fast/base/slow(180/280/420ms)、stagger 步进 60ms(最多 5 档) |
+| `AppRadius` | `app_radius.dart` | chip 16 / bubble 18(尾角 6) / card 20 / input 24 |
+| `AppShadows` | `app_shadows.dart` | 暖投影(基于砂/墨色低透明,非纯黑): soft / card / primary |
+
+主题在 `core/theme/app_theme.dart` 的 `AppTheme.lightTheme` 统一装配(Material3 `ColorScheme.fromSeed` + 各组件 theme 套 token)。
+
+### 动效基础设施(`core/animations/`)
+
+- `entrance.dart` — `Entrance(index: i, child: ...)` 包裹首屏元素做"淡入 + 上浮"入场，`index` 控制 stagger 错峰；仅首次构建跑一次。
+- `page_transitions.dart` — `fadeUpPage()` 统一页面过渡(淡入 + 轻上浮，静润曲线)，`app_router.dart` 所有顶层 `GoRoute` 的 `pageBuilder` 都用它；ShellRoute 内 tab 切换用 `AnimatedSwitcher`(`AppMotion.fast`)。
+- 底部导航是自定义 `widgets/common/app_bottom_nav.dart`(非 Material `BottomNavigationBar`)。
 
 ### API 端口
 - 开发环境: `http://localhost:8002` (Flutter `ApiEndpoints.baseUrl` 和 uvicorn 默认端口一致)
