@@ -20,16 +20,16 @@ class HealthRecordCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.bgCard,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withOpacity(AppColors.isDark ? 0.25 : 0.06),
             blurRadius: 12,
             offset: const Offset(0, 2),
           ),
         ],
-        border: Border.all(color: const Color(0xFFF0F0F0)),
+        border: Border.all(color: AppColors.borderSoft),
       ),
       child: InkWell(
         onTap: onTap,
@@ -51,7 +51,7 @@ class HealthRecordCard extends StatelessWidget {
                         children: [
                           Text(
                             record.type.displayName,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w500,
                               color: AppColors.textPrimary,
@@ -60,7 +60,7 @@ class HealthRecordCard extends StatelessWidget {
                           const SizedBox(height: 2),
                           Text(
                             DateFormat('yyyy-MM-dd HH:mm').format(record.recordedAt),
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 12,
                               color: AppColors.textMuted,
                             ),
@@ -72,7 +72,7 @@ class HealthRecordCard extends StatelessWidget {
                   if (onDelete != null)
                     GestureDetector(
                       onTap: onDelete,
-                      child: const Icon(
+                      child: Icon(
                         Icons.delete_outline,
                         color: AppColors.danger,
                         size: 20,
@@ -87,7 +87,7 @@ class HealthRecordCard extends StatelessWidget {
                 children: [
                   Text(
                     record.displayValue,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.w700,
                       color: AppColors.textPrimary,
@@ -96,7 +96,7 @@ class HealthRecordCard extends StatelessWidget {
                   const SizedBox(width: 4),
                   Text(
                     record.type.unit,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w400,
                       color: AppColors.textSecondary,

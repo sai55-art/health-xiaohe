@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:health_xiaohe/core/constants/app_colors.dart';
@@ -17,6 +18,22 @@ class ConversationDetailPage extends StatefulWidget {
 }
 
 class _ConversationDetailPageState extends State<ConversationDetailPage> {
+  static final _detailMarkdownStyle = MarkdownStyleSheet(
+    p: TextStyle(fontSize: 16, color: AppColors.textSecondary, height: 1.4),
+    strong: TextStyle(fontWeight: FontWeight.w600, color: AppColors.secondary),
+    h1: TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: AppColors.textSecondary, height: 1.4),
+    h2: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textSecondary, height: 1.4),
+    h3: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textSecondary, height: 1.4),
+    code: const TextStyle(backgroundColor: Color(0x0F000000), fontSize: 14, fontFamily: 'monospace'),
+    blockquoteDecoration: BoxDecoration(
+      color: AppColors.primaryLight,
+      borderRadius: const BorderRadius.horizontal(right: Radius.circular(8)),
+      border: Border(left: BorderSide(color: AppColors.primary, width: 3)),
+    ),
+    blockquotePadding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+    listBullet: TextStyle(fontSize: 16, color: AppColors.textSecondary),
+  );
+
   @override
   void initState() {
     super.initState();
@@ -29,13 +46,13 @@ class _ConversationDetailPageState extends State<ConversationDetailPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.bgBase,
         elevation: 0,
         title: BlocBuilder<ChatHistoryBloc, ChatHistoryState>(
           builder: (context, state) {
             return Text(
               state.selectedConversation?.title ?? '对话详情',
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.textPrimary,
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
@@ -46,7 +63,7 @@ class _ConversationDetailPageState extends State<ConversationDetailPage> {
           },
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textSecondary),
+          icon: Icon(Icons.arrow_back, color: AppColors.textSecondary),
           onPressed: () => context.pop(),
         ),
         actions: [
@@ -63,7 +80,7 @@ class _ConversationDetailPageState extends State<ConversationDetailPage> {
         ],
       ),
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
@@ -80,7 +97,7 @@ class _ConversationDetailPageState extends State<ConversationDetailPage> {
               return Center(
                 child: Text(
                   state.error!,
-                  style: const TextStyle(
+                  style: TextStyle(
                       color: AppColors.textTertiary, fontSize: 14),
                 ),
               );
@@ -122,7 +139,7 @@ class _ConversationDetailPageState extends State<ConversationDetailPage> {
               padding: const EdgeInsets.only(top: 4),
               child: Text(
                 timeStr,
-                style: const TextStyle(
+                style: TextStyle(
                     color: AppColors.textTertiary, fontSize: 11),
               ),
             ),
@@ -131,7 +148,7 @@ class _ConversationDetailPageState extends State<ConversationDetailPage> {
             Container(
               width: 32,
               height: 32,
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: AppColors.primary,
                 shape: BoxShape.circle,
               ),
@@ -156,15 +173,20 @@ class _ConversationDetailPageState extends State<ConversationDetailPage> {
                     ? null
                     : Border.all(color: AppColors.aiBubbleBorder),
               ),
-              child: Text(
-                msg.content,
-                style: TextStyle(
-                  color:
-                      isUser ? AppColors.userBubbleText : AppColors.textSecondary,
-                  fontSize: 16,
-                  height: 1.4,
-                ),
-              ),
+              child: isUser
+                  ? Text(
+                      msg.content,
+                      style: TextStyle(
+                        color: AppColors.userBubbleText,
+                        fontSize: 16,
+                        height: 1.4,
+                      ),
+                    )
+                  : MarkdownBody(
+                      data: msg.content,
+                      styleSheet: _detailMarkdownStyle,
+                      selectable: true,
+                    ),
             ),
           ),
           if (!isUser) ...[
@@ -173,7 +195,7 @@ class _ConversationDetailPageState extends State<ConversationDetailPage> {
               padding: const EdgeInsets.only(top: 4),
               child: Text(
                 timeStr,
-                style: const TextStyle(
+                style: TextStyle(
                     color: AppColors.textTertiary, fontSize: 11),
               ),
             ),

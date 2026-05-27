@@ -97,7 +97,7 @@ class _ChatHomePageState extends State<ChatHomePage> {
                 ),
               ),
               const SizedBox(width: 10),
-              const Expanded(
+              Expanded(
                 child: Text(
                   AppStrings.chatHomeTitle,
                   style: TextStyle(
@@ -116,7 +116,7 @@ class _ChatHomePageState extends State<ChatHomePage> {
             builder: (context, state) {
               if (state.conversationId != null) {
                 return IconButton(
-                  icon: const Icon(LucideIcons.plus, color: AppColors.primary),
+                  icon: Icon(LucideIcons.plus, color: AppColors.primary),
                   tooltip: '新建对话',
                   onPressed: () {
                     context.read<ChatBloc>().add(ChatNewConversation());
@@ -224,7 +224,7 @@ class _ChatHomePageState extends State<ChatHomePage> {
               if (state.isLoading) {
                 return Container(
                   padding: const EdgeInsets.all(8),
-                  child: const Row(
+                  child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       SizedBox(
@@ -306,7 +306,7 @@ class _ChatHomePageState extends State<ChatHomePage> {
                   right: 24,
                   bottom: 24,
                 ),
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -411,7 +411,7 @@ class _ChatHomePageState extends State<ChatHomePage> {
       leading: Icon(icon, color: color ?? AppColors.primary, size: 22),
       title: Text(
         title,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 15,
           color: AppColors.textPrimary,
         ),
@@ -447,7 +447,7 @@ class _ChatHomePageState extends State<ChatHomePage> {
           const SizedBox(height: 4),
           Entrance(
             index: 2,
-            child: const Text(
+            child: Text(
               '今天想聊些什么?我都在。',
               style: TextStyle(
                 fontFamily: null,

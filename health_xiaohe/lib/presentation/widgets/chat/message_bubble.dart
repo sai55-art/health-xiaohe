@@ -43,72 +43,72 @@ class AiMessageBubble extends StatelessWidget {
   const AiMessageBubble({super.key, required this.message, this.isStreaming = false});
 
   static final _styleSheet = MarkdownStyleSheet(
-    h1: const TextStyle(
+    h1: TextStyle(
       fontSize: 17,
       fontWeight: FontWeight.w600,
       color: AppColors.textSecondary,
       height: 1.4,
     ),
-    h2: const TextStyle(
+    h2: TextStyle(
       fontSize: 16,
       fontWeight: FontWeight.w600,
       color: AppColors.textSecondary,
       height: 1.4,
     ),
-    h3: const TextStyle(
+    h3: TextStyle(
       fontSize: 15,
       fontWeight: FontWeight.w600,
       color: AppColors.textSecondary,
       height: 1.4,
     ),
-    p: const TextStyle(
+    p: TextStyle(
       fontSize: 16,
       color: AppColors.textSecondary,
       height: 1.5,
     ),
-    strong: const TextStyle(
+    strong: TextStyle(
       fontWeight: FontWeight.w600,
       color: AppColors.secondary,
     ),
-    em: const TextStyle(fontStyle: FontStyle.italic),
-    code: const TextStyle(
-      backgroundColor: Color(0x0F000000),
+    em: TextStyle(fontStyle: FontStyle.italic),
+    code: TextStyle(
+      backgroundColor: AppColors.bgSubtle,
       fontSize: 14,
       fontFamily: 'monospace',
     ),
     codeblockDecoration: BoxDecoration(
-      color: const Color(0x0A000000),
+      color: AppColors.bgSubtle,
       borderRadius: BorderRadius.circular(8),
     ),
     blockquoteDecoration: BoxDecoration(
       color: AppColors.primaryLight,
-      borderRadius: const BorderRadius.horizontal(right: Radius.circular(8)),
-      border: const Border(
+      borderRadius: BorderRadius.horizontal(right: Radius.circular(8)),
+      border: Border(
         left: BorderSide(color: AppColors.primary, width: 3),
       ),
     ),
-    blockquotePadding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
-    horizontalRuleDecoration: const BoxDecoration(
+    blockquotePadding: EdgeInsets.fromLTRB(12, 8, 12, 8),
+    horizontalRuleDecoration: BoxDecoration(
       border: Border(
         top: BorderSide(color: AppColors.divider, width: 1),
       ),
     ),
-    listBullet: const TextStyle(
+    listBullet: TextStyle(
       fontSize: 16,
       color: AppColors.textSecondary,
     ),
-    tableBody: const TextStyle(
+    tableBody: TextStyle(
       fontSize: 14,
       color: AppColors.textSecondary,
     ),
   );
 
   // 流式期间的纯文本样式，和 Markdown 的 p 样式保持一致，完成时无缝切到 MarkdownBody
-  static const _streamingTextStyle = TextStyle(
-    fontSize: 16,
-    color: AppColors.textSecondary,
-    height: 1.5,
-  );
+  static TextStyle get _streamingTextStyle => TextStyle(
+        fontSize: 16,
+        color: AppColors.textSecondary,
+        height: 1.5,
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -120,7 +120,7 @@ class AiMessageBubble extends StatelessWidget {
           Container(
             width: 32,
             height: 32,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: AppColors.primary,
               shape: BoxShape.circle,
             ),
@@ -171,7 +171,7 @@ class AiMessageBubble extends StatelessWidget {
               padding: const EdgeInsets.only(top: 4),
               child: Text(
                 DateFormat('HH:mm').format(message.timestamp!),
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppColors.textTertiary,
                   fontSize: 11,
                 ),
@@ -243,7 +243,7 @@ class UserMessageBubble extends StatelessWidget {
               padding: const EdgeInsets.only(top: 4),
               child: Text(
                 DateFormat('HH:mm').format(message.timestamp!),
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppColors.textTertiary,
                   fontSize: 11,
                 ),

@@ -24,7 +24,7 @@ class PersonalCenterPage extends StatelessWidget {
             // User header with gradient background
             Container(
               width: double.infinity,
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -46,65 +46,67 @@ class PersonalCenterPage extends StatelessWidget {
                 ),
               ),
             ),
-            // Menu content
+            // Menu content — SafeArea 保底防止手势导航条遮挡底部按钮
             Expanded(
               child: Container(
                 color: AppColors.backgroundEnd,
-                child: ListView(
-                  padding: const EdgeInsets.all(20),
-                  children: [
-                    // AI 画像入口
-                    _buildMenuCard([
-                      _buildMenuItem(
-                        icon: Icons.psychology_outlined,
-                        iconColor: AppColors.primaryDark,
-                        iconBg: AppColors.primaryLight,
-                        title: 'AI 印象',
-                        subtitle: '查看和管理 AI 对你的认识',
-                        onTap: () => context.go(AppRouter.aiImpression),
-                        showDivider: false,
-                      ),
-                    ]),
-                    const SizedBox(height: 16),
-                    // Settings card
-                    _buildMenuCard([
-                      _buildMenuItem(
-                        icon: Icons.settings_outlined,
-                        iconColor: AppColors.secondary,
-                        iconBg: const Color(0xFFF0F5FF),
-                        title: '设置',
-                        onTap: () {},
-                      ),
-                      _buildMenuItem(
-                        icon: Icons.security_outlined,
-                        iconColor: AppColors.warning,
-                        iconBg: const Color(0xFFFFF7E6),
-                        title: '账号安全',
-                        onTap: () {},
-                        showDivider: false,
-                      ),
-                    ]),
-                    const SizedBox(height: 16),
-                    // About card
-                    _buildMenuCard([
-                      _buildMenuItem(
-                        icon: Icons.info_outline,
-                        iconColor: AppColors.success,
-                        iconBg: const Color(0xFFF6FFED),
-                        title: '关于我们',
-                        onTap: () => _showAboutDialog(context),
-                      ),
-                      _buildMenuItem(
-                        icon: Icons.help_outline,
-                        iconColor: AppColors.danger,
-                        iconBg: const Color(0xFFFFF1F0),
-                        title: '帮助与反馈',
-                        onTap: () {},
-                        showDivider: false,
-                      ),
-                    ]),
-                    const SizedBox(height: 24),
-                    // Logout button
+                child: SafeArea(
+                  top: false,
+                  child: ListView(
+                    padding: const EdgeInsets.all(20),
+                    children: [
+                      // AI 画像入口
+                      _buildMenuCard([
+                        _buildMenuItem(
+                          icon: Icons.psychology_outlined,
+                          iconColor: AppColors.primaryDark,
+                          iconBg: AppColors.primaryLight,
+                          title: 'AI 印象',
+                          subtitle: '查看和管理 AI 对你的认识',
+                          onTap: () => context.go(AppRouter.aiImpression),
+                          showDivider: false,
+                        ),
+                      ]),
+                      const SizedBox(height: 16),
+                      // Settings card
+                      _buildMenuCard([
+                        _buildMenuItem(
+                          icon: Icons.settings_outlined,
+                          iconColor: AppColors.secondary,
+                          iconBg: AppColors.secondary.withOpacity(0.14),
+                          title: '设置',
+                          onTap: () => context.push(AppRouter.settings),
+                        ),
+                        _buildMenuItem(
+                          icon: Icons.security_outlined,
+                          iconColor: AppColors.warning,
+                          iconBg: AppColors.warning.withOpacity(0.14),
+                          title: '账号安全',
+                          onTap: () {},
+                          showDivider: false,
+                        ),
+                      ]),
+                      const SizedBox(height: 16),
+                      // About card
+                      _buildMenuCard([
+                        _buildMenuItem(
+                          icon: Icons.info_outline,
+                          iconColor: AppColors.success,
+                          iconBg: AppColors.success.withOpacity(0.14),
+                          title: '关于我们',
+                          onTap: () => _showAboutDialog(context),
+                        ),
+                        _buildMenuItem(
+                          icon: Icons.help_outline,
+                          iconColor: AppColors.danger,
+                          iconBg: AppColors.danger.withOpacity(0.14),
+                          title: '帮助与反馈',
+                          onTap: () {},
+                          showDivider: false,
+                        ),
+                      ]),
+                      const SizedBox(height: 24),
+                      // Logout button
                     SizedBox(
                       width: double.infinity,
                       height: 52,
@@ -112,7 +114,7 @@ class PersonalCenterPage extends StatelessWidget {
                         onPressed: () => _confirmLogout(context),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: AppColors.danger,
-                          side: const BorderSide(color: AppColors.danger, width: 2),
+                          side: BorderSide(color: AppColors.danger, width: 2),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),
                           ),
@@ -123,7 +125,8 @@ class PersonalCenterPage extends StatelessWidget {
                         ),
                       ),
                     ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -178,11 +181,12 @@ class PersonalCenterPage extends StatelessWidget {
   Widget _buildMenuCard(List<Widget> children) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.bgCard,
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.borderSoft),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withOpacity(AppColors.isDark ? 0.25 : 0.06),
             blurRadius: 20,
             offset: const Offset(0, 4),
           ),
@@ -226,7 +230,7 @@ class PersonalCenterPage extends StatelessWidget {
                     children: [
                       Text(
                         title,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 15,
                           color: AppColors.textPrimary,
                         ),
@@ -235,7 +239,7 @@ class PersonalCenterPage extends StatelessWidget {
                         const SizedBox(height: 2),
                         Text(
                           subtitle,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
                             color: AppColors.textTertiary,
                           ),
@@ -244,7 +248,7 @@ class PersonalCenterPage extends StatelessWidget {
                     ],
                   ),
                 ),
-                const Icon(
+                Icon(
                   Icons.chevron_right,
                   color: AppColors.textMuted,
                   size: 20,
@@ -254,9 +258,9 @@ class PersonalCenterPage extends StatelessWidget {
           ),
         ),
         if (showDivider)
-          const Padding(
-            padding: EdgeInsets.only(left: 70),
-            child: Divider(height: 1, color: Color(0xFFF0F0F0)),
+          Padding(
+            padding: const EdgeInsets.only(left: 70),
+            child: Divider(height: 1, color: AppColors.bgSubtle),
           ),
       ],
     );
@@ -276,7 +280,7 @@ class PersonalCenterPage extends StatelessWidget {
             Text('健康小云'),
           ],
         ),
-        content: const Column(
+        content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -321,7 +325,7 @@ class PersonalCenterPage extends StatelessWidget {
               Navigator.pop(dialogContext);
               context.read<AuthBloc>().add(AuthLogoutRequested());
             },
-            child: const Text(
+            child: Text(
               '退出',
               style: TextStyle(color: AppColors.danger),
             ),

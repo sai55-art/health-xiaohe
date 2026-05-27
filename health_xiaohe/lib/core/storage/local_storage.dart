@@ -5,6 +5,7 @@ class LocalStorage {
   static const String _keyUserId = 'user_id';
   static const String _keyUserPhone = 'user_phone';
   static const String _keyUserNickname = 'user_nickname';
+  static const String _keyDarkMode = 'dark_mode';
 
   late SharedPreferences _prefs;
 
@@ -53,4 +54,11 @@ class LocalStorage {
   }
 
   bool get isLoggedIn => getJwtToken() != null;
+
+  // 深色模式偏好（默认 false=亮色）
+  Future<void> saveDarkMode(bool isDark) async {
+    await _prefs.setBool(_keyDarkMode, isDark);
+  }
+
+  bool getDarkMode() => _prefs.getBool(_keyDarkMode) ?? false;
 }

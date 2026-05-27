@@ -93,7 +93,7 @@ class _ChatInputFieldState extends State<ChatInputField> with TickerProviderStat
         if (_selectedImage != null)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            color: Colors.white,
+            color: AppColors.bgCard,
             child: Row(
               children: [
                 ClipRRect(
@@ -101,13 +101,13 @@ class _ChatInputFieldState extends State<ChatInputField> with TickerProviderStat
                   child: Image.memory(_selectedImage!, width: 56, height: 56, fit: BoxFit.cover),
                 ),
                 const SizedBox(width: 10),
-                const Text('图片已选中', style: TextStyle(fontSize: 13, color: AppColors.textTertiary)),
+                Text('图片已选中', style: TextStyle(fontSize: 13, color: AppColors.textTertiary)),
                 const Spacer(),
                 GestureDetector(
                   onTap: _removeImage,
                   child: Container(
                     width: 24, height: 24,
-                    decoration: const BoxDecoration(color: AppColors.danger, shape: BoxShape.circle),
+                    decoration: BoxDecoration(color: AppColors.danger, shape: BoxShape.circle),
                     child: const Icon(Icons.close, color: Colors.white, size: 14),
                   ),
                 ),
@@ -123,7 +123,7 @@ class _ChatInputFieldState extends State<ChatInputField> with TickerProviderStat
         // 输入栏
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: AppColors.bgBase,
             border: Border(top: BorderSide(color: AppColors.borderSoft)),
           ),
@@ -144,7 +144,7 @@ class _ChatInputFieldState extends State<ChatInputField> with TickerProviderStat
                         shape: BoxShape.circle,
                         border: Border.all(color: AppColors.border, width: 1.5),
                       ),
-                      child: const Icon(LucideIcons.plus, color: AppColors.textSecondary, size: 22),
+                      child: Icon(LucideIcons.plus, color: AppColors.textSecondary, size: 22),
                     ),
                   ),
                 ),
@@ -162,7 +162,7 @@ class _ChatInputFieldState extends State<ChatInputField> with TickerProviderStat
                       controller: _controller,
                       decoration: InputDecoration(
                         hintText: _selectedImage != null ? '输入文字描述...' : '请输入您的健康问题...',
-                        hintStyle: const TextStyle(color: AppColors.textMuted),
+                        hintStyle: TextStyle(color: AppColors.textMuted),
                         border: InputBorder.none,
                         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                         suffixIcon: GestureDetector(
@@ -213,9 +213,9 @@ class _ChatInputFieldState extends State<ChatInputField> with TickerProviderStat
   Widget _buildPanel() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      decoration: const BoxDecoration(
-        color: Color(0xFFF8F8F8),
-        border: Border(top: BorderSide(color: Color(0xFFEEEEEE))),
+      decoration: BoxDecoration(
+        color: AppColors.bgCard,
+        border: Border(top: BorderSide(color: AppColors.border)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -266,7 +266,7 @@ class _ChatInputFieldState extends State<ChatInputField> with TickerProviderStat
             child: Icon(icon, color: color, size: 28),
           ),
           const SizedBox(height: 6),
-          Text(label, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+          Text(label, style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
         ],
       ),
     );

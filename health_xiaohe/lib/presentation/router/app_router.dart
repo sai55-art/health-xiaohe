@@ -10,8 +10,8 @@ import 'package:health_xiaohe/presentation/pages/history/chat_history_page.dart'
 import 'package:health_xiaohe/presentation/pages/history/conversation_detail_page.dart';
 import 'package:health_xiaohe/presentation/pages/profile/personal_center_page.dart';
 import 'package:health_xiaohe/presentation/pages/profile/user_profile_page.dart';
+import 'package:health_xiaohe/presentation/pages/settings/settings_page.dart';
 import 'package:health_xiaohe/core/constants/app_colors.dart';
-import 'package:health_xiaohe/core/constants/app_motion.dart';
 import 'package:health_xiaohe/core/animations/page_transitions.dart';
 import 'package:health_xiaohe/presentation/widgets/common/app_bottom_nav.dart';
 
@@ -24,6 +24,7 @@ class AppRouter {
   static const String chatHistory = '/chat-history';
   static const String personalCenter = '/profile';
   static const String call = '/call';
+  static const String settings = '/settings';
 
   static final GoRouter router = GoRouter(
     initialLocation: splash,
@@ -42,6 +43,11 @@ class AppRouter {
         path: call,
         pageBuilder: (context, state) =>
             fadeUpPage(state: state, child: const CallPage()),
+      ),
+      GoRoute(
+        path: settings,
+        pageBuilder: (context, state) =>
+            fadeUpPage(state: state, child: const SettingsPage()),
       ),
       GoRoute(
         path: '/chat-history/:conversationId',
@@ -166,7 +172,7 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
                         width: 120,
                         height: 120,
                         decoration: BoxDecoration(
-                          gradient: const LinearGradient(
+                          gradient: LinearGradient(
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                             colors: [AppColors.primary, AppColors.primaryDark],
@@ -196,7 +202,7 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
                     offset: Offset(0, _slideAnimation.value),
                     child: Opacity(
                       opacity: _fadeAnimation.value,
-                      child: const Text(
+                      child: Text(
                         '健康小云',
                         style: TextStyle(
                           fontSize: 28,
@@ -216,7 +222,7 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
                     offset: Offset(0, _slideAnimation.value),
                     child: Opacity(
                       opacity: _fadeAnimation.value,
-                      child: const Text(
+                      child: Text(
                         '您的 AI 健康管家',
                         style: TextStyle(
                           fontSize: 14,
@@ -242,14 +248,10 @@ class MainShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 深色模式的全局变色由 app.dart 中 MaterialApp.builder 的 KeyedSubtree(isDark)
+    // 统一处理（重建整个 Navigator 子树），这里无需再监听主题。
     return Scaffold(
-      body: AnimatedSwitcher(
-        duration: AppMotion.fast,
-        child: KeyedSubtree(
-          key: ValueKey(GoRouterState.of(context).uri.path),
-          child: child,
-        ),
-      ),
+      body: child,
       bottomNavigationBar: AppBottomNav(
         currentIndex: _calculateSelectedIndex(context),
         onTap: (index) => _onItemTapped(index, context),
@@ -259,10 +261,12 @@ class MainShell extends StatelessWidget {
 
   int _calculateSelectedIndex(BuildContext context) {
     final location = GoRouterState.of(context).uri.toString();
-    if (location.startsWith(AppRouter.chatHome)) return 0;
-    if (location.startsWith(AppRouter.aiImpression)) return 1;
+    // 注意: chatHistory('/chat-history') 必须在 chatHome('/chat') 之前判断,
+    // 否则 '/chat-history'.startsWith('/chat') 会提前命中咨询 tab。
     if (location.startsWith(AppRouter.chatHistory)) return 2;
+    if (location.startsWith(AppRouter.aiImpression)) return 1;
     if (location.startsWith(AppRouter.personalCenter)) return 3;
+    if (location.startsWith(AppRouter.chatHome)) return 0;
     return 0;
   }
 

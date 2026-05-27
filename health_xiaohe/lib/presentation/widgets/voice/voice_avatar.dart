@@ -144,7 +144,7 @@ class _VoiceAvatarState extends State<VoiceAvatar>
         width: widget.size,
         height: widget.size,
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
+          gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [AppColors.primary, AppColors.primaryDark],
@@ -186,6 +186,29 @@ class _AvatarPainter extends CustomPainter {
     required this.coreSize,
   });
 
+  // 预缓存 — 避免每帧 new Paint / new SweepGradient / createShader()
+  final _fillPaint = Paint()..style = PaintingStyle.fill;
+  final _strokePaint = Paint()
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 4
+    ..strokeCap = StrokeCap.round;
+
+  // SweepGradient 本体不随旋转变化，只创建一次；旋转用 canvas.rotate 实现
+  static final _arcGradient = SweepGradient(
+    startAngle: 0,
+    endAngle: math.pi * 2,
+    colors: [
+      AppColors.primary.withOpacity(0.0),
+      AppColors.primary.withOpacity(0.0),
+      AppColors.primary.withOpacity(0.6),
+      AppColors.primaryDark.withOpacity(0.9),
+    ],
+    stops: [0.0, 0.5, 0.85, 1.0],
+  );
+
+  Shader? _cachedShader;
+  Rect? _cachedRect;
+
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
@@ -200,7 +223,7 @@ class _AvatarPainter extends CustomPainter {
         break;
       case VoiceAvatarMode.processing:
       case VoiceAvatarMode.connecting:
-        _drawRotatingArc(canvas, center, coreRadius);
+        _drawRotatingArc(canvas, center, coreRadius, size);
         break;
       case VoiceAvatarMode.idle:
         _drawIdleHalo(canvas, center, coreRadius);
@@ -209,65 +232,42 @@ class _AvatarPainter extends CustomPainter {
   }
 
   void _drawIdleHalo(Canvas canvas, Offset center, double r) {
-    final t = breath;
-    final paint = Paint()
-      ..color = AppColors.primary.withOpacity(0.12 + t * 0.05)
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(center, r * (1.18 + t * 0.04), paint);
+    _fillPaint.color = AppColors.primary.withOpacity(0.12 + breath * 0.05);
+    canvas.drawCircle(center, r * (1.18 + breath * 0.04), _fillPaint);
   }
 
   void _drawRipples(Canvas canvas, Offset center, double r) {
-    // 三个错位涟漪向外扩散
     for (int i = 0; i < 3; i++) {
       final progress = (ripple + i / 3) % 1.0;
-      final radius = r * (1.0 + progress * 1.15);
-      final opacity = (1.0 - progress) * 0.55;
-      final paint = Paint()
-        ..color = AppColors.primary.withOpacity(opacity)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 3.0 - progress * 2.0;
-      canvas.drawCircle(center, radius, paint);
+      _strokePaint.color = AppColors.primary.withOpacity((1.0 - progress) * 0.55);
+      _strokePaint.strokeWidth = 3.0 - progress * 2.0;
+      canvas.drawCircle(center, r * (1.0 + progress * 1.15), _strokePaint);
     }
   }
 
   void _drawPulse(Canvas canvas, Offset center, double r) {
-    // 双层光晕，呼吸式聚拢
-    final t = pulse;
-    final outerRadius = r * (1.35 - t * 0.1);
-    final outerOpacity = 0.18 + t * 0.18;
-    final outerPaint = Paint()
-      ..color = AppColors.primary.withOpacity(outerOpacity)
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(center, outerRadius, outerPaint);
+    _fillPaint.color = AppColors.primary.withOpacity(0.18 + pulse * 0.18);
+    canvas.drawCircle(center, r * (1.35 - pulse * 0.1), _fillPaint);
 
-    final innerRadius = r * (1.15 - t * 0.05);
-    final innerPaint = Paint()
-      ..color = AppColors.primaryLight.withOpacity(0.35 + t * 0.25)
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(center, innerRadius, innerPaint);
+    _fillPaint.color = AppColors.primaryLight.withOpacity(0.35 + pulse * 0.25);
+    canvas.drawCircle(center, r * (1.15 - pulse * 0.05), _fillPaint);
   }
 
-  void _drawRotatingArc(Canvas canvas, Offset center, double r) {
-    // 旋转的渐变弧线
+  void _drawRotatingArc(Canvas canvas, Offset center, double r, Size size) {
     final radius = r * 1.22;
     final rect = Rect.fromCircle(center: center, radius: radius);
-    final paint = Paint()
-      ..shader = SweepGradient(
-        startAngle: 0,
-        endAngle: math.pi * 2,
-        colors: [
-          AppColors.primary.withOpacity(0.0),
-          AppColors.primary.withOpacity(0.0),
-          AppColors.primary.withOpacity(0.6),
-          AppColors.primaryDark.withOpacity(0.9),
-        ],
-        stops: const [0.0, 0.5, 0.85, 1.0],
-        transform: GradientRotation(rotation * math.pi * 2),
-      ).createShader(rect)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 4
-      ..strokeCap = StrokeCap.round;
-    canvas.drawArc(rect, 0, math.pi * 2, false, paint);
+    // 只在画布尺寸变化时重建 shader（旋转通过 canvas.rotate 实现，不重建）
+    if (_cachedShader == null || _cachedRect != rect) {
+      _cachedRect = rect;
+      _cachedShader = _arcGradient.createShader(rect);
+    }
+    _strokePaint.shader = _cachedShader;
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+    canvas.rotate(rotation * math.pi * 2);
+    canvas.translate(-center.dx, -center.dy);
+    canvas.drawArc(rect, 0, math.pi * 2, false, _strokePaint);
+    canvas.restore();
   }
 
   @override

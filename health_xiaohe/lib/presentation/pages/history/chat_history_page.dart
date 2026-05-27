@@ -27,9 +27,9 @@ class _ChatHistoryPageState extends State<ChatHistoryPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.bgBase,
         elevation: 0,
-        title: const Text(
+        title: Text(
           '咨询历史',
           style: TextStyle(
             color: AppColors.textPrimary,
@@ -38,12 +38,12 @@ class _ChatHistoryPageState extends State<ChatHistoryPage> {
           ),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textSecondary),
+          icon: Icon(Icons.arrow_back, color: AppColors.textSecondary),
           onPressed: () => context.pop(),
         ),
       ),
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
@@ -70,7 +70,7 @@ class _ChatHistoryPageState extends State<ChatHistoryPage> {
                         color: AppColors.primaryLight,
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: const Center(
+                      child: Center(
                         child: Icon(Icons.error_outline,
                             color: AppColors.danger, size: 40),
                       ),
@@ -78,7 +78,7 @@ class _ChatHistoryPageState extends State<ChatHistoryPage> {
                     const SizedBox(height: 20),
                     Text(
                       state.error ?? '加载失败',
-                      style: const TextStyle(
+                      style: TextStyle(
                           color: AppColors.textTertiary, fontSize: 14),
                     ),
                     const SizedBox(height: 16),
@@ -114,7 +114,7 @@ class _ChatHistoryPageState extends State<ChatHistoryPage> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    const Text(
+                    Text(
                       '暂无咨询历史',
                       style: TextStyle(
                         color: AppColors.textPrimary,
@@ -123,7 +123,7 @@ class _ChatHistoryPageState extends State<ChatHistoryPage> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    const Text(
+                    Text(
                       '与健康小云的对话将显示在这里',
                       style: TextStyle(
                         color: AppColors.textTertiary,
@@ -170,7 +170,7 @@ class _ChatHistoryPageState extends State<ChatHistoryPage> {
       if (!mounted) return;
       messenger.hideCurrentSnackBar();
       messenger.showSnackBar(
-        const SnackBar(content: Text('标题已更新'), backgroundColor: AppColors.success),
+        SnackBar(content: Text('标题已更新'), backgroundColor: AppColors.success),
       );
       // ignore: use_build_context_synchronously
       context.read<ChatHistoryBloc>().add(ChatHistoryLoadConversations());
@@ -207,7 +207,7 @@ class _ChatHistoryPageState extends State<ChatHistoryPage> {
             content: const Text('删除后无法恢复，确定要删除这个对话吗？'),
             actions: [
               TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('取消')),
-              TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('删除', style: TextStyle(color: AppColors.danger))),
+              TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text('删除', style: TextStyle(color: AppColors.danger))),
             ],
           ),
         ) ?? false;
@@ -217,10 +217,10 @@ class _ChatHistoryPageState extends State<ChatHistoryPage> {
       },
       child: Card(
         elevation: 0,
-        color: Colors.white,
+        color: AppColors.bgCard,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
-          side: const BorderSide(color: AppColors.divider, width: 0.5),
+          side: BorderSide(color: AppColors.divider, width: 0.5),
         ),
         child: ListTile(
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -235,26 +235,26 @@ class _ChatHistoryPageState extends State<ChatHistoryPage> {
           title: Text(
             conv.title,
             maxLines: 1, overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: AppColors.textPrimary),
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: AppColors.textPrimary),
           ),
-          subtitle: Text(dateStr, style: const TextStyle(fontSize: 12, color: AppColors.textTertiary)),
+          subtitle: Text(dateStr, style: TextStyle(fontSize: 12, color: AppColors.textTertiary)),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               IconButton(
                 tooltip: '继续对话',
-                icon: const Icon(Icons.chat_outlined, size: 18, color: AppColors.primary),
+                icon: Icon(Icons.chat_outlined, size: 18, color: AppColors.primary),
                 onPressed: () => context.go('/chat?conversationId=$id'),
               ),
               PopupMenuButton<String>(
                 tooltip: '更多',
-                icon: const Icon(Icons.more_vert, size: 18, color: AppColors.textTertiary),
+                icon: Icon(Icons.more_vert, size: 18, color: AppColors.textTertiary),
                 onSelected: (action) {
                   if (action == 'regenerate') {
                     _regenerateTitle(id);
                   }
                 },
-                itemBuilder: (_) => const [
+                itemBuilder: (_) => [
                   PopupMenuItem(
                     value: 'regenerate',
                     child: Row(children: [

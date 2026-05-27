@@ -115,16 +115,19 @@ class _CallPageState extends State<CallPage> {
             const SnackBar(content: Text('请允许摄像头权限')),
           );
         }
+        setState(() => _videoEnabled = false);
         return;
       }
       await _cameraCapture.startCapture((base64Jpeg) {
-        if (_audioFlowing) {
+        if (_audioFlowing && _videoEnabled) {
           _voiceBloc?.add(VoiceSendImageChunk(base64Jpeg));
         }
       });
       debugPrint('[CALL] video capture started');
+      if (mounted) setState(() {}); // rebuild to show preview
     } catch (e) {
       debugPrint('[CALL] startVideo error: $e');
+      if (mounted) setState(() => _videoEnabled = false);
     }
   }
 
@@ -152,11 +155,14 @@ class _CallPageState extends State<CallPage> {
     if (state is VoiceConnected && !_callStarted) {
       _callStarted = true;
       _startTimer();
-      _audioRecorder.gateOn();
+      // 接通后全开麦克风，让用户正常说话即可被听到
+      _audioRecorder.unmute();
+      _audioRecorder.gateOff();
       setState(() => _avatarMode = VoiceAvatarMode.idle);
     } else if (state is VoiceConnected) {
+      // 一轮回复结束后重新进入聆听
       _audioRecorder.unmute();
-      _audioRecorder.gateOn();
+      _audioRecorder.gateOff();
       setState(() => _avatarMode = VoiceAvatarMode.idle);
     } else if (state is VoiceListening) {
       _audioRecorder.unmute();
@@ -171,12 +177,16 @@ class _CallPageState extends State<CallPage> {
     } else if (state is VoiceUserText) {
       setState(() => _userText = state.text);
     } else if (state is VoiceReceivingText) {
+      final modeChanged = _avatarMode != VoiceAvatarMode.speaking;
       setState(() {
         _aiText = state.text;
-        _avatarMode = VoiceAvatarMode.speaking;
+        if (modeChanged) {
+          _avatarMode = VoiceAvatarMode.speaking;
+        }
       });
     } else if (state is VoiceReceivingAudio) {
-      _audioRecorder.mute();
+      // AI 说话时：噪声门压低环境音防回声，但不完全静音，DashScope 仍需听到用户打断
+      _audioRecorder.gateOn();
       _audioPlayer.play(state.audioData);
       setState(() => _avatarMode = VoiceAvatarMode.speaking);
     } else if (state is VoiceProcessingInput) {
@@ -216,79 +226,111 @@ class _CallPageState extends State<CallPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: Container(
-        decoration: _videoEnabled
-            ? BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.black.withOpacity(0.35),
-                    Colors.black.withOpacity(0.55),
-                  ],
-                ),
-              )
-            : const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Color(0xFF0F2A3F),
-                    Color(0xFF071521),
-                  ],
-                ),
-              ),
-        child: SafeArea(
-          child: BlocConsumer<VoiceBloc, VoiceState>(
+      body: Stack(
+        children: [
+          // 视频背景：buildPreview 内部已处理比例填充
+          if (_videoEnabled)
+            Positioned.fill(
+              child: _cameraCapture.buildPreview() ?? const SizedBox.shrink(),
+            ),
+          // 统一叠加暗色渐变，保证文字和控件可读
+          Positioned.fill(
+            child: Container(
+              decoration: _videoEnabled
+                  ? BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.black.withOpacity(0.4),
+                          Colors.black.withOpacity(0.6),
+                        ],
+                      ),
+                    )
+                  : const BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Color(0xFF0F2A3F),
+                          Color(0xFF071521),
+                        ],
+                      ),
+                    ),
+            ),
+          ),
+          // UI 层
+          Positioned.fill(child: SafeArea(
+          child: BlocListener<VoiceBloc, VoiceState>(
             listener: (context, state) => _handleStateChange(state),
-            builder: (context, state) {
-              return Column(
-                children: [
-                  _buildTopBar(),
-                  const SizedBox(height: 8),
-                  Expanded(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        VoiceAvatar(mode: _avatarMode, size: 132),
-                        const SizedBox(height: 28),
-                        const Text(
-                          '健康小云',
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                            letterSpacing: 0.5,
+            child: Column(
+              children: [
+                _buildTopBar(),
+                const SizedBox(height: 8),
+                Expanded(
+                  // 转录卡片出现后内边距较紧，允许轻微滚动防止溢出
+                  child: Center(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // VoiceAvatar 只依赖 _avatarMode（由 listener → setState 驱动），
+                          // 不在 BlocBuilder 内，流式文字 delta 不会触发它重建
+                          RepaintBoundary(
+                            child: VoiceAvatar(mode: _avatarMode, size: 132),
                           ),
-                        ),
-                        const SizedBox(height: 10),
-                        _buildAnimatedStatus(state),
-                        const SizedBox(height: 24),
-                        if (_userText.isNotEmpty)
-                          TranscriptCard(
-                            role: TranscriptRole.user,
-                            text: _userText,
+                          const SizedBox(height: 28),
+                          const Text(
+                            '健康小云',
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                              letterSpacing: 0.5,
+                            ),
                           ),
-                        if (_userText.isNotEmpty && _aiText.isNotEmpty)
                           const SizedBox(height: 10),
-                        if (_aiText.isNotEmpty)
-                          TranscriptCard(
-                            role: TranscriptRole.ai,
-                            text: _aiText,
+                          // 仅文本 + 状态行依赖 BLoC state 增量更新
+                          BlocBuilder<VoiceBloc, VoiceState>(
+                            builder: (context, state) {
+                              return Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  _buildAnimatedStatus(state),
+                                  const SizedBox(height: 24),
+                                  if (_userText.isNotEmpty)
+                                    TranscriptCard(
+                                      role: TranscriptRole.user,
+                                      text: _userText,
+                                    ),
+                                  if (_userText.isNotEmpty &&
+                                      _aiText.isNotEmpty)
+                                    const SizedBox(height: 10),
+                                  if (_aiText.isNotEmpty)
+                                    TranscriptCard(
+                                      role: TranscriptRole.ai,
+                                      text: _aiText,
+                                    ),
+                                ],
+                              );
+                            },
                           ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
-                  _buildControlButtons(state),
-                  const SizedBox(height: 32),
-                ],
-              );
-            },
+                ),
+                _buildControlButtons(),
+                const SizedBox(height: 32),
+            ],
+            ),
           ),
         ),
       ),
-    );
-  }
+      ],
+    ),
+  );
+}
 
   Widget _buildTopBar() {
     return Padding(
@@ -309,7 +351,7 @@ class _CallPageState extends State<CallPage> {
                 Container(
                   width: 8,
                   height: 8,
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     color: AppColors.primary,
                     shape: BoxShape.circle,
                   ),
@@ -365,7 +407,7 @@ class _CallPageState extends State<CallPage> {
     );
   }
 
-  Widget _buildControlButtons(VoiceState state) {
+  Widget _buildControlButtons() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Row(
@@ -402,7 +444,10 @@ class _CallPageState extends State<CallPage> {
             background: _isSpeakerOn
                 ? AppColors.primary.withOpacity(0.85)
                 : Colors.white.withOpacity(0.12),
-            onTap: () => setState(() => _isSpeakerOn = !_isSpeakerOn),
+            onTap: () {
+              setState(() => _isSpeakerOn = !_isSpeakerOn);
+              _audioPlayer.setSpeaker(_isSpeakerOn);
+            },
           ),
           _CtrlButton(
             icon: Icons.call_end,

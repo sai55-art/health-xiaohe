@@ -40,7 +40,9 @@ class TranscriptCard extends StatelessWidget {
         );
       },
       child: Container(
-        key: ValueKey('$role-$text'),
+        // 仅用 role 做 key：卡片只在首次出现时播放入场动画；
+        // 流式文字更新不再触发 AnimatedSwitcher 的 slide+fade
+        key: ValueKey(role),
         margin: const EdgeInsets.symmetric(horizontal: 24),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(

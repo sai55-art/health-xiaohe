@@ -28,8 +28,8 @@ class _HealthRecordsPageState extends State<HealthRecordsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        title: const Text(
+        backgroundColor: AppColors.bgBase,
+        title: Text(
           AppStrings.healthRecords,
           style: TextStyle(
             color: AppColors.textPrimary,
@@ -38,7 +38,7 @@ class _HealthRecordsPageState extends State<HealthRecordsPage> {
           ),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textSecondary),
+          icon: Icon(Icons.arrow_back, color: AppColors.textSecondary),
           onPressed: () => context.pop(),
         ),
       ),
@@ -53,14 +53,14 @@ class _HealthRecordsPageState extends State<HealthRecordsPage> {
             );
           } else if (state is HealthRecordCreated) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
+              SnackBar(
                 content: Text('记录创建成功'),
                 backgroundColor: AppColors.success,
               ),
             );
           } else if (state is HealthRecordDeleted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
+              SnackBar(
                 content: Text('记录已删除'),
                 backgroundColor: AppColors.success,
               ),
@@ -69,7 +69,7 @@ class _HealthRecordsPageState extends State<HealthRecordsPage> {
         },
         builder: (context, state) {
           if (state is HealthLoading) {
-            return const Center(
+            return Center(
               child: CircularProgressIndicator(color: AppColors.primary),
             );
           }
@@ -87,7 +87,7 @@ class _HealthRecordsPageState extends State<HealthRecordsPage> {
                       style: TextStyle(fontSize: 64),
                     ),
                     const SizedBox(height: AppSpacing.md),
-                    const Text(
+                    Text(
                       AppStrings.noRecords,
                       style: TextStyle(
                         color: AppColors.textTertiary,
@@ -159,7 +159,7 @@ class _HealthRecordsPageState extends State<HealthRecordsPage> {
               Navigator.pop(dialogContext);
               context.read<HealthBloc>().add(HealthDeleteRecord(recordId));
             },
-            child: const Text(
+            child: Text(
               '删除',
               style: TextStyle(color: AppColors.danger),
             ),
@@ -220,7 +220,7 @@ class _AddHealthRecordSheetState extends State<AddHealthRecordSheet> {
               ),
             ),
             const SizedBox(height: AppSpacing.lg),
-            const Text(
+            Text(
               AppStrings.addRecord,
               style: TextStyle(
                 fontSize: 18,

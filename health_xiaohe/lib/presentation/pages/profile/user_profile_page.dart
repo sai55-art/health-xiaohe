@@ -56,14 +56,14 @@ class _UserProfilePageState extends State<UserProfilePage> {
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('保存成功'), backgroundColor: AppColors.success),
+          SnackBar(content: Text('保存成功'), backgroundColor: AppColors.success),
         );
         _load();
       }
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('保存失败'), backgroundColor: AppColors.danger),
+          SnackBar(content: Text('保存失败'), backgroundColor: AppColors.danger),
         );
       }
     }
@@ -77,14 +77,14 @@ class _UserProfilePageState extends State<UserProfilePage> {
       await api.dio.delete('/api/user/memories/$memoryId');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('已忘记'), backgroundColor: AppColors.success),
+          SnackBar(content: Text('已忘记'), backgroundColor: AppColors.success),
         );
         _load();
       }
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('删除失败'), backgroundColor: AppColors.danger),
+          SnackBar(content: Text('删除失败'), backgroundColor: AppColors.danger),
         );
       }
     }
@@ -106,12 +106,12 @@ class _UserProfilePageState extends State<UserProfilePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        title: const Text('用户画像', style: TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.w600)),
-        leading: IconButton(icon: const Icon(Icons.arrow_back, color: AppColors.textSecondary), onPressed: () => context.pop()),
+        backgroundColor: AppColors.bgBase,
+        title: Text('用户画像', style: TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.w600)),
+        leading: IconButton(icon: Icon(Icons.arrow_back, color: AppColors.textSecondary), onPressed: () => context.pop()),
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+          ? Center(child: CircularProgressIndicator(color: AppColors.primary))
           : ListView(padding: const EdgeInsets.all(16), children: [
               _buildBasicInfo(),
               const SizedBox(height: 16),
@@ -134,9 +134,9 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
     return _card([
       Row(children: [
-        Container(width: 56, height: 56, decoration: BoxDecoration(gradient: const LinearGradient(colors: [AppColors.primary, AppColors.primaryDark]), borderRadius: BorderRadius.circular(16)), child: const Icon(Icons.person, color: Colors.white, size: 30)),
+        Container(width: 56, height: 56, decoration: BoxDecoration(gradient: LinearGradient(colors: [AppColors.primary, AppColors.primaryDark]), borderRadius: BorderRadius.circular(16)), child: const Icon(Icons.person, color: Colors.white, size: 30)),
         const SizedBox(width: 16),
-        const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('基本信息', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)), Text('完善信息以获得更精准的健康建议', style: TextStyle(fontSize: 13, color: AppColors.textTertiary))])),
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('基本信息', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)), Text('完善信息以获得更精准的健康建议', style: TextStyle(fontSize: 13, color: AppColors.textTertiary))])),
         TextButton(onPressed: _showEditDialog, child: const Text('编辑')),
       ]),
       const SizedBox(height: 12),
@@ -159,7 +159,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
       _header(Icons.warning_amber, AppColors.warning, '健康标签'),
       const SizedBox(height: 12),
       if (tags.isEmpty)
-        const Text('暂无标签，AI 将在对话中评估健康风险', style: TextStyle(fontSize: 14, color: AppColors.textTertiary))
+        Text('暂无标签，AI 将在对话中评估健康风险', style: TextStyle(fontSize: 14, color: AppColors.textTertiary))
       else
         _chipRow(tags.map((t) {
           final s = t.toString();
@@ -183,12 +183,12 @@ class _UserProfilePageState extends State<UserProfilePage> {
           Text('左滑可删除', style: TextStyle(fontSize: 12, color: AppColors.textTertiary)),
       ]),
       if (_memories.isEmpty)
-        const Padding(padding: EdgeInsets.only(top: 8), child: Text('开始对话后，AI 会自动提取并记住与你相关的重要信息', style: TextStyle(fontSize: 14, color: AppColors.textTertiary)))
+        Padding(padding: EdgeInsets.only(top: 8), child: Text('开始对话后，AI 会自动提取并记住与你相关的重要信息', style: TextStyle(fontSize: 14, color: AppColors.textTertiary)))
       else
         ...byCat.entries.map((e) => Padding(
               padding: const EdgeInsets.only(top: 12),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(_catNames[e.key] ?? e.key, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
+                Text(_catNames[e.key] ?? e.key, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
                 const SizedBox(height: 6),
                 ...e.value.map<Widget>((m) => _buildMemoryRow(m)),
               ]),
@@ -229,7 +229,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                   TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('取消')),
                   TextButton(
                     onPressed: () => Navigator.pop(ctx, true),
-                    child: const Text('确认忘记', style: TextStyle(color: AppColors.danger)),
+                    child: Text('确认忘记', style: TextStyle(color: AppColors.danger)),
                   ),
                 ],
               ),
@@ -247,8 +247,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('• ', style: TextStyle(color: AppColors.primaryDark)),
-            Expanded(child: Text(fact, style: const TextStyle(fontSize: 14, color: AppColors.textPrimary, height: 1.5))),
+            Text('• ', style: TextStyle(color: AppColors.primaryDark)),
+            Expanded(child: Text(fact, style: TextStyle(fontSize: 14, color: AppColors.textPrimary, height: 1.5))),
           ],
         ),
       ),
@@ -268,7 +268,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
   }
 
   Widget _chip(String label, String value) {
-    return Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8), decoration: BoxDecoration(color: AppColors.aiBubbleBg, borderRadius: BorderRadius.circular(10)), child: Row(mainAxisSize: MainAxisSize.min, children: [Text('$label：', style: const TextStyle(fontSize: 13, color: AppColors.textTertiary)), Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500))]));
+    return Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8), decoration: BoxDecoration(color: AppColors.aiBubbleBg, borderRadius: BorderRadius.circular(10)), child: Row(mainAxisSize: MainAxisSize.min, children: [Text('$label：', style: TextStyle(fontSize: 13, color: AppColors.textTertiary)), Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500))]));
   }
 
   Color _tagColor(String tag) {
@@ -295,7 +295,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('性别', style: TextStyle(fontSize: 13, color: AppColors.textTertiary)),
+                Text('性别', style: TextStyle(fontSize: 13, color: AppColors.textTertiary)),
                 const SizedBox(height: 6),
                 Wrap(
                   spacing: 8,
