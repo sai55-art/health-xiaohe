@@ -75,6 +75,10 @@ export class VoiceClient {
     this.sendJson({ type: 'audio', data: b64 });
   }
 
+  sendImage(b64: string): void {
+    this.sendJson({ type: 'image', data: b64 });
+  }
+
   commit(): void {
     this.sendJson({ type: 'commit' });
   }

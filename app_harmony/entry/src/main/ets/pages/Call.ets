@@ -2,6 +2,7 @@ import { router, promptAction } from '@kit.ArkUI';
 import { abilityAccessCtrl, common, Permissions } from '@kit.AbilityKit';
 import { VoiceClient } from '../common/net/VoiceClient';
 import { AudioEngine } from '../common/audio/AudioEngine';
+import { CameraEngine } from '../common/camera/CameraEngine';
 import { Space, FS } from '../common/theme/Tokens';
 
 interface CallParams {
@@ -18,8 +19,11 @@ struct Call {
   @State transcript: string = '';
   @State connected: boolean = false;
   @State muted: boolean = false;
+  @State videoOn: boolean = false;
   private client: VoiceClient = new VoiceClient();
   private engine: AudioEngine = new AudioEngine();
+  private cameraEngine: CameraEngine = new CameraEngine();
+  private xController: XComponentController = new XComponentController();
   private pingTimer: number = -1;
 
   async aboutToAppear(): Promise<void> {
@@ -32,7 +36,7 @@ struct Call {
     try {
       const ctx = getContext(this) as common.UIAbilityContext;
       const atManager = abilityAccessCtrl.createAtManager();
-      const perms: Permissions[] = ['ohos.permission.MICROPHONE'];
+      const perms: Permissions[] = ['ohos.permission.MICROPHONE', 'ohos.permission.CAMERA'];
       await atManager.requestPermissionsFromUser(ctx, perms);
     } catch (e) {
       // 忽略，连接后启动音频时若无权限会失败提示
@@ -87,12 +91,35 @@ struct Call {
     }
   }
 
+  private async startVideo(surfaceId: string): Promise<void> {
+    try {
+      const ctx = getContext(this) as common.UIAbilityContext;
+      this.cameraEngine.onFrame = (b64: string) => {
+        this.client.sendImage(b64);
+      };
+      await this.cameraEngine.start(ctx, surfaceId);
+    } catch (e) {
+      promptAction.showToast({ message: '摄像头启动失败' });
+      this.videoOn = false;
+    }
+  }
+
+  private async toggleVideo(): Promise<void> {
+    if (this.videoOn) {
+      this.videoOn = false;
+      await this.cameraEngine.stop();
+    } else {
+      this.videoOn = true; // XComponent onLoad 时触发 startVideo
+    }
+  }
+
   async aboutToDisappear(): Promise<void> {
     if (this.pingTimer !== -1) {
       clearInterval(this.pingTimer);
       this.pingTimer = -1;
     }
     await this.engine.stop();
+    await this.cameraEngine.stop();
     this.client.close();
   }
 
@@ -111,12 +138,21 @@ struct Call {
     Column() {
       Blank().height(60)
 
-      Column() {
-        Text('🌿').fontSize(64)
+      if (this.videoOn) {
+        XComponent({ id: 'camPreview', type: XComponentType.SURFACE, controller: this.xController })
+          .onLoad(() => {
+            const sid: string = this.xController.getXComponentSurfaceId();
+            this.startVideo(sid);
+          })
+          .width(220).height(300).borderRadius(16)
+      } else {
+        Column() {
+          Text('🌿').fontSize(64)
+        }
+        .width(140).height(140).borderRadius(70)
+        .backgroundColor(this.connected ? '#337FB3A8' : '#22FFFFFF')
+        .justifyContent(FlexAlign.Center)
       }
-      .width(140).height(140).borderRadius(70)
-      .backgroundColor(this.connected ? '#337FB3A8' : '#22FFFFFF')
-      .justifyContent(FlexAlign.Center)
 
       Text('健康小云')
         .fontSize(24).fontWeight(FontWeight.Bold)
@@ -139,6 +175,9 @@ struct Call {
           this.muted = !this.muted;
           this.engine.muted = this.muted;
           promptAction.showToast({ message: this.muted ? '已静音' : '已取消静音' });
+        })
+        this.controlButton($r('sys.symbol.camera'), this.videoOn ? '#7FB3A8' : '#33FFFFFF', () => {
+          this.toggleVideo();
         })
         this.controlButton($r('sys.symbol.phone_down_fill'), '#D9695F', () => {
           router.back();
