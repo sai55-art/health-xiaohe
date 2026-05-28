@@ -52,4 +52,8 @@ export class ApiClient {
   static get(path: string, auth: boolean = true): Promise<ApiResp> {
     return ApiClient.request(http.RequestMethod.GET, path, null, auth);
   }
+
+  static del(path: string, auth: boolean = true): Promise<ApiResp> {
+    return ApiClient.request(http.RequestMethod.DELETE, path, null, auth);
+  }
 }

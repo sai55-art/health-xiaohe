@@ -1,25 +1,121 @@
 import { router, promptAction } from '@kit.ArkUI';
+import { abilityAccessCtrl, common, Permissions } from '@kit.AbilityKit';
+import { VoiceClient } from '../common/net/VoiceClient';
+import { AudioEngine } from '../common/audio/AudioEngine';
 import { Space, FS } from '../common/theme/Tokens';
 
-/// 语音通话页（对应 Flutter call_page）。恒定深色背景的通话界面。
-/// 注：DashScope Realtime 实时音频流(WebSocket + PCM)在 ArkTS 端适配成本高，
-/// 此处先还原 UI 与交互骨架，实时语音为占位，可后续接入 @ohos.multimedia.audio。
+interface CallParams {
+  conversationId?: string;
+}
+
+/// 语音通话页（对应 Flutter call_page）。
+/// WebSocket 连后端 voice/ws + AudioEngine 采集 16k PCM 上行、播放 24k PCM 下行。
+/// 后端 server VAD 自动断句并响应（无需手动 commit）。视频帧上行见后续 CameraEngine。
 @Entry
 @Component
 struct Call {
-  @State status: string = '语音通话演示（实时音频待接入）';
+  @State status: string = '正在连接…';
+  @State transcript: string = '';
+  @State connected: boolean = false;
   @State muted: boolean = false;
+  private client: VoiceClient = new VoiceClient();
+  private engine: AudioEngine = new AudioEngine();
+  private pingTimer: number = -1;
+
+  async aboutToAppear(): Promise<void> {
+    // 取当前会话 id，传给后端把语音内容并入同一对话
+    const params = router.getParams() as CallParams;
+    const convId: string = (params !== null && params !== undefined && params.conversationId !== undefined)
+      ? params.conversationId : '';
+
+    // 申请麦克风权限
+    try {
+      const ctx = getContext(this) as common.UIAbilityContext;
+      const atManager = abilityAccessCtrl.createAtManager();
+      const perms: Permissions[] = ['ohos.permission.MICROPHONE'];
+      await atManager.requestPermissionsFromUser(ctx, perms);
+    } catch (e) {
+      // 忽略，连接后启动音频时若无权限会失败提示
+    }
+
+    this.client.onConnected = (cid: string) => {
+      this.connected = true;
+      this.status = '已连接 · 请说话';
+      this.startAudio();
+    };
+    this.client.onText = (t: string) => {
+      // AI 流式 delta；完整转录走 onAiText，避免重复，这里不追加
+    };
+    this.client.onUserText = (t: string) => {
+      if (t.length > 0) {
+        this.transcript += '你：' + t + '\n\n';
+      }
+    };
+    this.client.onAiText = (t: string) => {
+      if (t.length > 0) {
+        this.transcript += '小云：' + t + '\n\n';
+      }
+    };
+    this.client.onAudio = (b64: string) => {
+      this.engine.enqueue(b64);
+    };
+    this.client.onDone = () => {
+      this.status = '已连接 · 请继续';
+    };
+    this.client.onError = (m: string) => {
+      this.status = '错误：' + m;
+    };
+    this.client.onClose = () => {
+      this.connected = false;
+      this.status = '连接已关闭';
+    };
+    this.client.connect(convId);
+    this.pingTimer = setInterval(() => {
+      this.client.ping();
+    }, 15000);
+  }
+
+  private async startAudio(): Promise<void> {
+    try {
+      await this.engine.startPlayback();
+      this.engine.onPcm = (b64: string) => {
+        this.client.sendAudio(b64);
+      };
+      await this.engine.startCapture();
+    } catch (e) {
+      this.status = '音频启动失败（需麦克风权限/真机）';
+    }
+  }
+
+  async aboutToDisappear(): Promise<void> {
+    if (this.pingTimer !== -1) {
+      clearInterval(this.pingTimer);
+      this.pingTimer = -1;
+    }
+    await this.engine.stop();
+    this.client.close();
+  }
+
+  @Builder
+  controlButton(icon: Resource, bg: string, onTap: () => void) {
+    Column() {
+      SymbolGlyph(icon).fontSize(28).fontColor(['#FFFFFF'])
+    }
+    .width(64).height(64).borderRadius(32)
+    .backgroundColor(bg)
+    .justifyContent(FlexAlign.Center)
+    .onClick(onTap)
+  }
 
   build() {
     Column() {
-      Blank().height(80)
+      Blank().height(60)
 
-      // AI 头像
       Column() {
         Text('🌿').fontSize(64)
       }
       .width(140).height(140).borderRadius(70)
-      .backgroundColor('#22FFFFFF')
+      .backgroundColor(this.connected ? '#337FB3A8' : '#22FFFFFF')
       .justifyContent(FlexAlign.Center)
 
       Text('健康小云')
@@ -30,15 +126,21 @@ struct Call {
         .fontSize(FS.body).fontColor('#B0C4D4')
         .margin({ top: Space.sm })
 
-      Blank()
+      Scroll() {
+        Text(this.transcript.length > 0 ? this.transcript : '（语音对话将显示在这里）')
+          .fontSize(FS.body).fontColor('#D8E4EC')
+          .width('100%').textAlign(TextAlign.Start).lineHeight(22)
+      }
+      .layoutWeight(1).width('100%').padding(Space.lg)
+      .align(Alignment.Top)
 
-      // 控制按钮
       Row() {
-        this.controlButton(this.muted ? '🔇' : '🎤', '#33FFFFFF', () => {
+        this.controlButton(this.muted ? $r('sys.symbol.mic_slash') : $r('sys.symbol.mic'), '#33FFFFFF', () => {
           this.muted = !this.muted;
+          this.engine.muted = this.muted;
           promptAction.showToast({ message: this.muted ? '已静音' : '已取消静音' });
         })
-        this.controlButton('📞', '#D9695F', () => {
+        this.controlButton($r('sys.symbol.phone_down_fill'), '#D9695F', () => {
           router.back();
         })
       }
@@ -48,16 +150,5 @@ struct Call {
     }
     .width('100%').height('100%')
     .backgroundColor('#1A2A3A')
-  }
-
-  @Builder
-  controlButton(icon: string, bg: string, onTap: () => void) {
-    Column() {
-      Text(icon).fontSize(28)
-    }
-    .width(64).height(64).borderRadius(32)
-    .backgroundColor(bg)
-    .justifyContent(FlexAlign.Center)
-    .onClick(onTap)
   }
 }

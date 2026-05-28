@@ -1,6 +1,7 @@
 import { ApiClient, ApiResp } from '../common/net/ApiClient';
 import { Api } from '../common/net/Api';
 import { MemoryItem } from '../common/models/Models';
+import { promptAction } from '@kit.ArkUI';
 import { R, Space, FS } from '../common/theme/Tokens';
 
 interface ProfileInner {
@@ -50,6 +51,16 @@ export struct UserProfileView {
     }
   }
 
+  private async deleteMemory(id: string): Promise<void> {
+    const resp: ApiResp = await ApiClient.del(Api.memory(id), true);
+    if (resp.code === 200 || resp.code === 204) {
+      this.memories = this.memories.filter((m: MemoryItem) => m.id !== id);
+      promptAction.showToast({ message: '已删除' });
+    } else {
+      promptAction.showToast({ message: '删除失败(' + resp.code + ')' });
+    }
+  }
+
   build() {
     Scroll() {
       Column() {
@@ -95,11 +106,18 @@ export struct UserProfileView {
             .fontColor($r('app.color.text_primary'))
             .width('100%').margin({ top: Space.lg, bottom: Space.sm })
           ForEach(this.memories, (m: MemoryItem) => {
-            Column() {
-              Text(m.category).fontSize(FS.caption).fontColor($r('app.color.accent'))
-              Text(m.fact).fontSize(FS.body).fontColor($r('app.color.text_primary')).margin({ top: 4 })
+            Row() {
+              Column() {
+                Text(m.category).fontSize(FS.caption).fontColor($r('app.color.accent'))
+                Text(m.fact).fontSize(FS.body).fontColor($r('app.color.text_primary')).margin({ top: 4 })
+              }
+              .layoutWeight(1).alignItems(HorizontalAlign.Start)
+
+              SymbolGlyph($r('sys.symbol.trash')).fontSize(18)
+                .fontColor([$r('app.color.danger')]).padding(6)
+                .onClick(() => { this.deleteMemory(m.id); })
             }
-            .width('100%').alignItems(HorizontalAlign.Start).padding(Space.md)
+            .width('100%').alignItems(VerticalAlign.Top).padding(Space.md)
             .backgroundColor($r('app.color.bg_card')).borderRadius(R.card)
             .border({ width: 1, color: $r('app.color.border_soft') })
             .margin({ bottom: Space.sm })

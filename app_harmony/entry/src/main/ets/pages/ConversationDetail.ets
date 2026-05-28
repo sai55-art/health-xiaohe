@@ -2,6 +2,7 @@ import { router } from '@kit.ArkUI';
 import { ApiClient, ApiResp } from '../common/net/ApiClient';
 import { Api } from '../common/net/Api';
 import { ChatMessage } from '../common/models/Models';
+import { MarkdownText } from '../components/MarkdownText';
 import { R, Space, FS } from '../common/theme/Tokens';
 
 interface DetailParams {
@@ -53,13 +54,23 @@ struct ConversationDetail {
   @Builder
   bubble(msg: ChatMessage) {
     Row() {
-      Text(msg.content)
-        .fontSize(FS.body)
-        .fontColor(msg.role === 'user' ? $r('app.color.on_primary') : $r('app.color.text_primary'))
-        .backgroundColor(msg.role === 'user' ? $r('app.color.primary') : $r('app.color.bg_card'))
+      if (msg.role === 'user') {
+        Text(msg.content)
+          .fontSize(FS.body)
+          .fontColor($r('app.color.on_primary'))
+          .backgroundColor($r('app.color.primary'))
+          .borderRadius(R.bubble)
+          .padding(Space.md)
+          .constraintSize({ maxWidth: '80%' })
+      } else {
+        Column() {
+          MarkdownText({ content: msg.content })
+        }
+        .backgroundColor($r('app.color.bg_card'))
         .borderRadius(R.bubble)
         .padding(Space.md)
-        .constraintSize({ maxWidth: '80%' })
+        .constraintSize({ maxWidth: '86%' })
+      }
     }
     .width('100%')
     .justifyContent(msg.role === 'user' ? FlexAlign.End : FlexAlign.Start)
@@ -69,8 +80,8 @@ struct ConversationDetail {
   build() {
     Column() {
       Row() {
-        Text('‹')
-          .fontSize(30).fontColor($r('app.color.text_secondary'))
+        SymbolGlyph($r('sys.symbol.chevron_left'))
+          .fontSize(22).fontColor([$r('app.color.text_secondary')])
           .onClick(() => { router.back(); })
         Text(this.title)
           .fontSize(FS.title).fontColor($r('app.color.text_primary'))

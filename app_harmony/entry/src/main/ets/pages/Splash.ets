@@ -1,4 +1,4 @@
-import { router } from '@kit.ArkUI';
+import { router, font } from '@kit.ArkUI';
 import { Prefs } from '../common/storage/Prefs';
 
 /// 启动页：短暂展示品牌后按登录态跳转（对应 Flutter SplashPage）。
@@ -6,6 +6,8 @@ import { Prefs } from '../common/storage/Prefs';
 @Component
 struct Splash {
   aboutToAppear(): void {
+    // 全局注册宋体（注册到当前 UI 实例，后续所有页面可用 fontFamily('NotoSerifSC')）
+    font.registerFont({ familyName: 'NotoSerifSC', familySrc: $rawfile('NotoSerifSC.ttf') });
     setTimeout(() => {
       const target: string = Prefs.isLoggedIn ? 'pages/Main' : 'pages/Login';
       router.replaceUrl({ url: target });
@@ -25,6 +27,7 @@ struct Splash {
 
       Text('健康小云')
         .fontSize(28)
+        .fontFamily('NotoSerifSC')
         .fontWeight(FontWeight.Bold)
         .fontColor($r('app.color.text_primary'))
         .margin({ top: 24 })

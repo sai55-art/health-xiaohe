@@ -19,8 +19,8 @@ struct Settings {
     Column() {
       // 顶部栏
       Row() {
-        Text('‹')
-          .fontSize(30).fontColor($r('app.color.text_secondary'))
+        SymbolGlyph($r('sys.symbol.chevron_left'))
+          .fontSize(22).fontColor([$r('app.color.text_secondary')])
           .onClick(() => { router.back(); })
         Text('设置')
           .fontSize(FS.title).fontColor($r('app.color.text_primary'))
@@ -30,7 +30,8 @@ struct Settings {
 
       // 深色模式开关
       Row() {
-        Text(this.dark ? '🌙' : '☀️').fontSize(18).margin({ right: Space.md })
+        SymbolGlyph(this.dark ? $r('sys.symbol.moon') : $r('sys.symbol.sun_max'))
+          .fontSize(20).fontColor([$r('app.color.primary_dark')]).margin({ right: Space.md })
         Column() {
           Text('深色模式').fontSize(FS.body).fontColor($r('app.color.text_primary'))
           Text(this.dark ? '暖墨夜间配色' : '奶油暖调日间配色')

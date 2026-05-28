@@ -21,11 +21,11 @@ export struct PersonalCenterView {
   }
 
   @Builder
-  menuItem(icon: string, title: string, onTap: () => void) {
+  menuItem(icon: Resource, title: string, onTap: () => void) {
     Row() {
-      Text(icon).fontSize(18).margin({ right: Space.md })
+      SymbolGlyph(icon).fontSize(20).fontColor([$r('app.color.text_secondary')]).margin({ right: Space.md })
       Text(title).fontSize(FS.body).fontColor($r('app.color.text_primary')).layoutWeight(1)
-      Text('›').fontSize(22).fontColor($r('app.color.text_muted'))
+      SymbolGlyph($r('sys.symbol.chevron_right')).fontSize(16).fontColor([$r('app.color.text_muted')])
     }
     .width('100%')
     .padding(Space.md)
@@ -64,9 +64,9 @@ export struct PersonalCenterView {
         Column() {
           // 设置卡片
           Column() {
-            this.menuItem('⚙️', '设置', () => { router.pushUrl({ url: 'pages/Settings' }); })
+            this.menuItem($r('sys.symbol.gearshape'), '设置', () => { router.pushUrl({ url: 'pages/Settings' }); })
             Divider().color($r('app.color.bg_subtle')).margin({ left: Space.md })
-            this.menuItem('🔒', '账号安全', () => {
+            this.menuItem($r('sys.symbol.lock'), '账号安全', () => {
               promptAction.showToast({ message: '功能开发中' });
             })
           }
@@ -78,7 +78,7 @@ export struct PersonalCenterView {
 
           // 关于卡片
           Column() {
-            this.menuItem('ℹ️', '关于我们', () => {
+            this.menuItem($r('sys.symbol.info_circle'), '关于我们', () => {
               promptAction.showToast({ message: '健康小云 · 鸿蒙版 v1.0.0' });
             })
           }

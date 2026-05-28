@@ -19,6 +19,17 @@ export class Api {
     return '/api/consult/conversations/' + id;
   }
 
+  static conversationRegenTitle(id: string): string {
+    return '/api/consult/conversations/' + id + '/regenerate-title';
+  }
+
   // User profile & memory
   static readonly userProfile: string = '/api/user/profile';
+
+  static memory(id: string): string {
+    return '/api/user/memories/' + id;
+  }
+
+  // 语音通话 WebSocket（token 走 query）
+  static readonly voiceWs: string = '/api/consult/voice/ws';
 }

@@ -13,6 +13,16 @@ struct Login {
   @State password: string = '';
   @State isLogin: boolean = true;
   @State loading: boolean = false;
+  @State entered: boolean = false;
+
+  aboutToAppear(): void {
+    // 进场：淡入 + 轻微上浮（对应 Flutter Entrance）。先渲染初始态再 animateTo
+    setTimeout(() => {
+      animateTo({ duration: 420, curve: Curve.EaseOut }, () => {
+        this.entered = true;
+      });
+    }, 16);
+  }
 
   private toast(msg: string): void {
     promptAction.showToast({ message: msg, duration: 2000 });
@@ -96,6 +106,7 @@ struct Login {
 
           Text('健康小云')
             .fontSize(34)
+            .fontFamily('NotoSerifSC')
             .fontWeight(FontWeight.Bold)
             .fontColor($r('app.color.text_primary'))
             .width('100%')
@@ -138,6 +149,8 @@ struct Login {
         .width('100%')
         .padding({ left: Space.lg, right: Space.lg })
         .alignItems(HorizontalAlign.Start)
+        .opacity(this.entered ? 1 : 0)
+        .translate({ y: this.entered ? 0 : 20 })
       }
       .layoutWeight(1)
     }

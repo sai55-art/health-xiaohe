@@ -10,11 +10,11 @@ struct Main {
   @State index: number = 0;
 
   @Builder
-  tabBuilder(idx: number, icon: string, label: string) {
+  tabBuilder(idx: number, symbol: Resource, label: string) {
     Column() {
-      Text(icon)
-        .fontSize(22)
-        .opacity(this.index === idx ? 1 : 0.5)
+      SymbolGlyph(symbol)
+        .fontSize(24)
+        .fontColor([this.index === idx ? $r('app.color.primary') : $r('app.color.text_tertiary')])
       Text(label)
         .fontSize(11)
         .margin({ top: 2 })
@@ -29,19 +29,19 @@ struct Main {
     Tabs({ barPosition: BarPosition.End, index: this.index }) {
       TabContent() {
         ChatHomeView()
-      }.tabBar(this.tabBuilder(0, '💬', '咨询'))
+      }.tabBar(this.tabBuilder(0, $r('sys.symbol.message'), '咨询'))
 
       TabContent() {
         UserProfileView()
-      }.tabBar(this.tabBuilder(1, '🪷', '画像'))
+      }.tabBar(this.tabBuilder(1, $r('sys.symbol.heart'), '画像'))
 
       TabContent() {
         ChatHistoryView()
-      }.tabBar(this.tabBuilder(2, '🕐', '历史'))
+      }.tabBar(this.tabBuilder(2, $r('sys.symbol.clock'), '历史'))
 
       TabContent() {
         PersonalCenterView()
-      }.tabBar(this.tabBuilder(3, '👤', '我的'))
+      }.tabBar(this.tabBuilder(3, $r('sys.symbol.person'), '我的'))
     }
     .barHeight(64)
     .barBackgroundColor($r('app.color.bg_card'))

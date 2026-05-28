@@ -9,6 +9,8 @@ export interface User {
 export interface ChatMessage {
   role: string; // 'user' | 'assistant'
   content: string;
+  image?: string;    // 发送给后端的 base64（data URL）
+  imageUri?: string; // 本地预览用的相册 uri
 }
 
 export interface Conversation {

@@ -1,4 +1,4 @@
-import { router } from '@kit.ArkUI';
+import { router, promptAction } from '@kit.ArkUI';
 import { ApiClient, ApiResp } from '../common/net/ApiClient';
 import { Api } from '../common/net/Api';
 import { Conversation } from '../common/models/Models';
@@ -44,6 +44,27 @@ export struct ChatHistoryView {
     }
   }
 
+  private async deleteConv(id: string): Promise<void> {
+    const resp: ApiResp = await ApiClient.del(Api.conversationDetail(id), true);
+    if (resp.code === 200 || resp.code === 204) {
+      promptAction.showToast({ message: '已删除' });
+      this.load();
+    } else {
+      promptAction.showToast({ message: '删除失败(' + resp.code + ')' });
+    }
+  }
+
+  private async regenTitle(id: string): Promise<void> {
+    promptAction.showToast({ message: '重新生成中…' });
+    const empty: Record<string, string> = {};
+    const resp: ApiResp = await ApiClient.post(Api.conversationRegenTitle(id), empty, true);
+    if (resp.code === 200) {
+      this.load();
+    } else {
+      promptAction.showToast({ message: '失败(' + resp.code + ')' });
+    }
+  }
+
   build() {
     Column() {
       Text('对话历史')
@@ -61,22 +82,33 @@ export struct ChatHistoryView {
         List() {
           ForEach(this.items, (c: Conversation) => {
             ListItem() {
-              Column() {
-                Text(c.title.length > 0 ? c.title : '未命名对话')
-                  .fontSize(FS.body).fontWeight(FontWeight.Medium)
-                  .fontColor($r('app.color.text_primary')).width('100%')
-                if (c.updated_at) {
-                  Text(c.updated_at)
-                    .fontSize(FS.caption).fontColor($r('app.color.text_tertiary'))
-                    .margin({ top: 4 })
+              Row() {
+                Column() {
+                  Text(c.title.length > 0 ? c.title : '未命名对话')
+                    .fontSize(FS.body).fontWeight(FontWeight.Medium)
+                    .fontColor($r('app.color.text_primary'))
+                    .maxLines(1).textOverflow({ overflow: TextOverflow.Ellipsis })
+                  if (c.updated_at) {
+                    Text(c.updated_at)
+                      .fontSize(FS.caption).fontColor($r('app.color.text_tertiary'))
+                      .margin({ top: 4 })
+                  }
                 }
+                .layoutWeight(1).alignItems(HorizontalAlign.Start)
+                .onClick(() => {
+                  router.pushUrl({ url: 'pages/ConversationDetail', params: { 'id': c.id, 'title': c.title } });
+                })
+
+                SymbolGlyph($r('sys.symbol.arrow_clockwise')).fontSize(18)
+                  .fontColor([$r('app.color.text_tertiary')]).padding(6)
+                  .onClick(() => { this.regenTitle(c.id); })
+                SymbolGlyph($r('sys.symbol.trash')).fontSize(18)
+                  .fontColor([$r('app.color.danger')]).padding(6)
+                  .onClick(() => { this.deleteConv(c.id); })
               }
-              .width('100%').alignItems(HorizontalAlign.Start).padding(Space.md)
+              .width('100%').padding(Space.md).alignItems(VerticalAlign.Center)
               .backgroundColor($r('app.color.bg_card')).borderRadius(R.card)
               .border({ width: 1, color: $r('app.color.border_soft') })
-              .onClick(() => {
-                router.pushUrl({ url: 'pages/ConversationDetail', params: { 'id': c.id, 'title': c.title } });
-              })
             }
             .margin({ bottom: Space.sm })
           }, (c: Conversation) => c.id)
