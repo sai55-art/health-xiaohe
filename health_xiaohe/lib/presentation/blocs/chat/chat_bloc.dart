@@ -1,3 +1,7 @@
+// ============================================================
+// AI 生成：本文件由 AI（Claude / Trae）辅助生成
+// 人工修改：经开发者 review、测试反馈与需求确认后迭代调整
+// ============================================================
 import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -10,6 +14,12 @@ import 'chat_state.dart';
 class ChatBloc extends Bloc<ChatEvent, ChatState> {
   final ChatRepository _chatRepository;
   StreamSubscription<SseChunk>? _streamSubscription;
+
+  // SSE chunk 节流缓冲 — 后端 token 颗粒 ~10-30Hz，每次 emit 都会让 MarkdownBody
+  // 重新解析整段文本 + ListView 重建。节流到 ~20Hz 把重解析次数砍 5-10 倍
+  String _pendingContent = '';
+  Timer? _flushTimer;
+  static const _flushInterval = Duration(milliseconds: 50);
 
   ChatBloc(this._chatRepository) : super(const ChatState()) {
     on<ChatInitialize>(_onInitialize);
@@ -65,12 +75,24 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       _streamSubscription?.cancel();
       _streamSubscription = stream.listen(
         (chunk) {
-          add(ChatReceiveStreamChunk(chunk));
+          // suggestions / conversation_id 立即下发，不积压
+          if (!chunk.hasContent) {
+            add(ChatReceiveStreamChunk(chunk));
+            return;
+          }
+          _pendingContent += chunk.content!;
+          _flushTimer ??= Timer(_flushInterval, _flushPending);
         },
         onError: (error) {
+          _flushTimer?.cancel();
+          _flushTimer = null;
+          _flushPending(); // 出错前把已积压的字推出去
           add(ChatStreamError(error.toString()));
         },
         onDone: () {
+          _flushTimer?.cancel();
+          _flushTimer = null;
+          _flushPending(); // 结束前 flush 剩余内容
           add(ChatStreamCompleted());
         },
       );
@@ -165,8 +187,17 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     }
   }
 
+  void _flushPending() {
+    _flushTimer = null;
+    if (_pendingContent.isEmpty) return;
+    final buffered = _pendingContent;
+    _pendingContent = '';
+    add(ChatReceiveStreamChunk(SseChunk(content: buffered)));
+  }
+
   @override
   Future<void> close() {
+    _flushTimer?.cancel();
     _streamSubscription?.cancel();
     return super.close();
   }

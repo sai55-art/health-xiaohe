@@ -1,3 +1,7 @@
+// ============================================================
+// AI 生成：本文件由 AI（Claude / Trae）辅助生成
+// 人工修改：经开发者 review、测试反馈与需求确认后迭代调整
+// ============================================================
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:health_xiaohe/core/constants/app_colors.dart';
