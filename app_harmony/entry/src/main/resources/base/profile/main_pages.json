@@ -1,0 +1,10 @@
+{
+  "src": [
+    "pages/Splash",
+    "pages/Login",
+    "pages/Main",
+    "pages/Settings",
+    "pages/ConversationDetail",
+    "pages/Call"
+  ]
+}
